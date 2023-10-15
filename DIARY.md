@@ -20,3 +20,7 @@
 - Creating a Contact Page
 - Examining the http.Request Type
 - Custom Rounting
+- url.Path vs url.RawPath
+  - Acesse [urlencoder.com](urlencoder.com)
+  - url.Path irá mostrar caminhos decodificados, caso algum seja fornecido na URL. Exemplo: / => %2F.
+  - url.RawPath irá mostrar os caminhos na forma que foi fornecida. (codificada).
