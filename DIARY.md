@@ -28,3 +28,4 @@
 - The http.Handler Type
 - The http.HandlerFunc Type
 - Exploring Handler Conversions
+- FAQ Exercise
