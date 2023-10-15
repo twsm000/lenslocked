@@ -25,3 +25,4 @@
   - url.Path irá mostrar caminhos decodificados, caso algum seja fornecido na URL. Exemplo: / => %2F.
   - url.RawPath irá mostrar os caminhos na forma que foi fornecida. (codificada).
 - Not Found Page
+- The http.Handler Type

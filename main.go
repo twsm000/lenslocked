@@ -7,11 +7,21 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/contact", contactHandler)
-
 	log.Printf("Starting server at port: http://localhost:%d\n", 8080)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8080", Router{})
+}
+
+type Router struct{}
+
+func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	switch r.URL.Path {
+	case "/":
+		homeHandler(w, r)
+	case "/contact":
+		contactHandler(w, r)
+	default:
+		http.Error(w, "Page not found", http.StatusNotFound)
+	}
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
