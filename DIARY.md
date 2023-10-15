@@ -16,3 +16,4 @@
 ## Chapter 2 - Adding New Pages
 
 - Dynamic Reloading
+- Setting Header Values
