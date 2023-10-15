@@ -26,3 +26,4 @@
   - url.RawPath irá mostrar os caminhos na forma que foi fornecida. (codificada).
 - Not Found Page
 - The http.Handler Type
+- The http.HandlerFunc Type

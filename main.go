@@ -8,12 +8,10 @@ import (
 
 func main() {
 	log.Printf("Starting server at port: http://localhost:%d\n", 8080)
-	http.ListenAndServe(":8080", Router{})
+	http.ListenAndServe(":8080", http.HandlerFunc(pathHandler))
 }
 
-type Router struct{}
-
-func (router Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func pathHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/":
 		homeHandler(w, r)
