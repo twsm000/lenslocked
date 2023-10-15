@@ -27,3 +27,4 @@
 - Not Found Page
 - The http.Handler Type
 - The http.HandlerFunc Type
+- Exploring Handler Conversions
