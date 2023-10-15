@@ -10,3 +10,4 @@
 - Web Requests
 - HTTP Methods
 - Our Handler Function
+- Registering our Handler Function and Starting the Web Server
