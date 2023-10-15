@@ -11,3 +11,8 @@
 - HTTP Methods
 - Our Handler Function
 - Registering our Handler Function and Starting the Web Server
+- Go Modules
+
+## Chapter 2 - Adding New Pages
+
+- Dynamic Reloading
