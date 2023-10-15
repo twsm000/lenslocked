@@ -17,3 +17,4 @@
 
 - Dynamic Reloading
 - Setting Header Values
+- Creating a Contact Page
