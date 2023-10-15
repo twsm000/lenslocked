@@ -8,3 +8,4 @@
 - Editors and Automatic Imports
 - The "Hello, World" Part of Our Code
 - Web Requests
+- HTTP Methods
