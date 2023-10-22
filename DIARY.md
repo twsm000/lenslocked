@@ -35,3 +35,4 @@
 - Router Requirements
 - Using Git
 - Installing Chi
+- Using Chi

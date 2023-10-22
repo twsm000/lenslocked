@@ -1,41 +1,74 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+)
+
+var (
+	logInfo  *log.Logger = log.New(os.Stdout, "INFO: ", log.LstdFlags)
+	logError *log.Logger = log.New(os.Stderr, "ERROR: ", log.LstdFlags)
 )
 
 func main() {
-	log.Printf("Starting server at port: http://localhost:%d\n", 8080)
-	http.ListenAndServe(":8080", http.HandlerFunc(pathHandler))
+	server := http.Server{
+		Addr:    ":8080",
+		Handler: NewRouter(),
+	}
+	Run(&server)
 }
 
-func pathHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
-	case "/":
-		homeHandler(w, r)
-	case "/contact":
-		contactHandler(w, r)
-	case "/faq":
-		faqHandler(w, r)
-	default:
-		http.Error(w, "Page not found", http.StatusNotFound)
+func NewRouter() http.Handler {
+	router := chi.NewRouter()
+	router.Get("/", setContentTypeTextHtml(homeHandler))
+	router.Get("/contact", setContentTypeTextHtml(contactHandler))
+	router.Get("/faq", setContentTypeTextHtml(faqHandler))
+	router.NotFound(setContentTypeTextHtml(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}))
+
+	return router
+}
+
+func Run(server *http.Server) {
+	go func() {
+		logInfo.Printf("Starting server at port: %s\n", server.Addr)
+		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			logError.Println("Failed to close http server:", err)
+		}
+	}()
+
+	gracefullyShutdown := make(chan os.Signal, 1)
+	signal.Notify(gracefullyShutdown, syscall.SIGINT, syscall.SIGTERM)
+	<-gracefullyShutdown
+
+	logInfo.Println("Closing http server gracefully.")
+	shutdownServerCtx, closeServer := context.WithTimeout(context.Background(), 10*time.Second)
+	defer closeServer()
+	if err := server.Shutdown(shutdownServerCtx); err != nil {
+		logError.Println("Failed to shutdown gracefully http server:", err)
 	}
+	fmt.Println("Bye...")
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprintln(w, "<h1>Home</h1>")
 }
 
 func contactHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprint(w, "<h1>Contact Page</h1><p>To get in touch, email me at <a href=\"mailto:twsm000@gmail.com\">twsm000@gmail.com</a>.</p>")
 }
 
 func faqHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprint(w, `<h1>FAQ Page</h1>
   <ul>
 	<li>
@@ -53,4 +86,11 @@ func faqHandler(w http.ResponseWriter, r *http.Request) {
 	</li>
   </ul>
   `)
+}
+
+func setContentTypeTextHtml(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		next(w, r)
+	}
 }
