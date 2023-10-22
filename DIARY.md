@@ -36,3 +36,4 @@
 - Using Git
 - Installing Chi
 - Using Chi
+- Chi Exercises

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 var (
@@ -29,6 +30,7 @@ func main() {
 
 func NewRouter() http.Handler {
 	router := chi.NewRouter()
+	router.Use(middleware.Logger)
 	router.Get("/", setContentTypeTextHtml(homeHandler))
 	router.Get("/contact", setContentTypeTextHtml(contactHandler))
 	router.Get("/faq", setContentTypeTextHtml(faqHandler))
