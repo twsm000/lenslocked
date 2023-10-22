@@ -29,3 +29,7 @@
 - The http.HandlerFunc Type
 - Exploring Handler Conversions
 - FAQ Exercise
+
+## Chapter 3 - Routers and 3rd party libraries
+
+- Router Requirements
