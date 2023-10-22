@@ -33,3 +33,4 @@
 ## Chapter 3 - Routers and 3rd party libraries
 
 - Router Requirements
+- Using Git
