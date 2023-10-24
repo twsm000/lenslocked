@@ -41,3 +41,4 @@
 ## Chapter 4 - Templates
 
 - What are Templates
+- Why Use Server Side Rendering?
