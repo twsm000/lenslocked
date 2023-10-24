@@ -37,3 +37,7 @@
 - Installing Chi
 - Using Chi
 - Chi Exercises
+
+## Chapter 4 - Templates
+
+- What are Templates
