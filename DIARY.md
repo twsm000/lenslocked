@@ -42,3 +42,4 @@
 
 - What are Templates
 - Why Use Server Side Rendering?
+- Creating Our First Template
