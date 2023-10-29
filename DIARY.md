@@ -49,3 +49,4 @@
 - Home Page via Template
 - Contact Page via Template
 - FAQ Page via Template
+- Template Exercises
