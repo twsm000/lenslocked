@@ -46,3 +46,4 @@
 - Cross Site Scripting (XSS)
 - Alternative Template Libs
 - Contextual Encoding
+- Home Page via Template
