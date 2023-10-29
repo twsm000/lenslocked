@@ -45,3 +45,4 @@
 - Creating Our First Template
 - Cross Site Scripting (XSS)
 - Alternative Template Libs
+- Contextual Encoding
