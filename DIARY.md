@@ -50,3 +50,7 @@
 - Contact Page via Template
 - FAQ Page via Template
 - Template Exercises
+
+## Chapter 5 - Code Organization
+
+- Code Organization
