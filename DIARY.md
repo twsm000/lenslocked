@@ -47,3 +47,4 @@
 - Alternative Template Libs
 - Contextual Encoding
 - Home Page via Template
+- Contact Page via Template

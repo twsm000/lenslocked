@@ -64,8 +64,8 @@ func Run(server *http.Server) {
 	fmt.Println("Bye...")
 }
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles(filepath.Join("templates", "home.html"))
+func executeTemplate(w http.ResponseWriter, fpath string) {
+	tmpl, err := template.ParseFiles(fpath)
 	if err != nil {
 		log.Println("failed to parse error:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -78,9 +78,12 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	executeTemplate(w, filepath.Join("templates", "home.html"))
+}
 
 func contactHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "<h1>Contact Page</h1><p>To get in touch, email me at <a href=\"mailto:twsm000@gmail.com\">twsm000@gmail.com</a>.</p>")
+	executeTemplate(w, filepath.Join("templates", "contact.html"))
 }
 
 func faqHandler(w http.ResponseWriter, r *http.Request) {
