@@ -57,3 +57,7 @@
 - MVC Overview
 - Walking Through a Web Request With MVC
 - MVC Exercises
+
+## Chapter 6 - Starting to Apply MVC
+
+- Creating the views package

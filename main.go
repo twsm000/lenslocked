@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/twsm000/lenslocked/views"
 )
 
 var (
@@ -65,18 +65,14 @@ func Run(server *http.Server) {
 }
 
 func executeTemplate(w http.ResponseWriter, fpath string) {
-	tmpl, err := template.ParseFiles(fpath)
+	tmpl, err := views.ParseTemplate(fpath)
 	if err != nil {
 		log.Println("failed to parse error:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	if err := tmpl.Execute(w, nil); err != nil {
-		log.Println("failed to execute template:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
+	tmpl.Execute(w, nil)
 }
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	executeTemplate(w, filepath.Join("templates", "home.html"))
