@@ -61,3 +61,4 @@
 ## Chapter 6 - Starting to Apply MVC
 
 - Creating the views package
+- fmt.Errorf
