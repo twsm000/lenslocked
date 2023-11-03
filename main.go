@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/twsm000/lenslocked/controllers"
 	"github.com/twsm000/lenslocked/views"
 )
 
@@ -31,12 +32,15 @@ func main() {
 }
 
 func NewRouter() http.Handler {
+	homeTemplate := MustGet(views.ParseTemplate(filepath.Join("templates", "home.html")))
+	contactTemplate := MustGet(views.ParseTemplate(filepath.Join("templates", "contact.html")))
+	faqTemplate := MustGet(views.ParseTemplate(filepath.Join("templates", "faq.html")))
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
-	router.Get("/", setContentTypeTextHtml(homeHandler))
-	router.Get("/contact", setContentTypeTextHtml(contactHandler))
-	router.Get("/faq", setContentTypeTextHtml(faqHandler))
-	router.NotFound(setContentTypeTextHtml(func(w http.ResponseWriter, r *http.Request) {
+	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTemplate)))
+	router.Get("/contact", AsHTML(controllers.StaticTemplateHandler(contactTemplate)))
+	router.Get("/faq", AsHTML(controllers.StaticTemplateHandler(faqTemplate)))
+	router.NotFound(AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}))
 
@@ -74,21 +78,18 @@ func executeTemplate(w http.ResponseWriter, fpath string) {
 
 	tmpl.Execute(w, nil)
 }
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	executeTemplate(w, filepath.Join("templates", "home.html"))
-}
 
-func contactHandler(w http.ResponseWriter, r *http.Request) {
-	executeTemplate(w, filepath.Join("templates", "contact.html"))
-}
-
-func faqHandler(w http.ResponseWriter, r *http.Request) {
-	executeTemplate(w, filepath.Join("templates", "faq.html"))
-}
-
-func setContentTypeTextHtml(next http.HandlerFunc) http.HandlerFunc {
+// AsHTML set the response header Content-Type to text/html
+func AsHTML(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		next(w, r)
 	}
+}
+
+func MustGet[T any](t T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return t
 }
