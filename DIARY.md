@@ -63,3 +63,4 @@
 - Creating the views package
 - fmt.Errorf
 - Validating Templates at Startup
+- Must Functions
