@@ -71,3 +71,4 @@
 - Variadic Parameters
 - Named Templates
 - Dynamic FAQ Page
+- Reusable Layouts
