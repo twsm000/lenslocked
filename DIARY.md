@@ -64,3 +64,7 @@
 - fmt.Errorf
 - Validating Templates at Startup
 - Must Functions
+
+## Chapter 7 - Enhancing Our Views
+
+- Embedding Templates Files

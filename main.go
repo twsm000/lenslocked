@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/twsm000/lenslocked/controllers"
+	"github.com/twsm000/lenslocked/templates"
 	"github.com/twsm000/lenslocked/views"
 )
 
@@ -32,9 +32,9 @@ func main() {
 }
 
 func NewRouter() http.Handler {
-	homeTemplate := MustGet(views.ParseTemplate(filepath.Join("templates", "home.html")))
-	contactTemplate := MustGet(views.ParseTemplate(filepath.Join("templates", "contact.html")))
-	faqTemplate := MustGet(views.ParseTemplate(filepath.Join("templates", "faq.html")))
+	homeTemplate := MustGet(views.ParseFSTemplate(templates.FS, "home.html"))
+	contactTemplate := MustGet(views.ParseFSTemplate(templates.FS, "contact.html"))
+	faqTemplate := MustGet(views.ParseFSTemplate(templates.FS, "faq.html"))
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTemplate)))
