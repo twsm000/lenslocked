@@ -69,3 +69,4 @@
 
 - Embedding Templates Files
 - Variadic Parameters
+- Named Templates
