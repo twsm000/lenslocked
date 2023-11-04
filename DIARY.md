@@ -70,3 +70,4 @@
 - Embedding Templates Files
 - Variadic Parameters
 - Named Templates
+- Dynamic FAQ Page

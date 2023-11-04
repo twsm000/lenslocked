@@ -39,7 +39,7 @@ func NewRouter() http.Handler {
 	router.Use(middleware.Logger)
 	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTemplate)))
 	router.Get("/contact", AsHTML(controllers.StaticTemplateHandler(contactTemplate)))
-	router.Get("/faq", AsHTML(controllers.StaticTemplateHandler(faqTemplate)))
+	router.Get("/faq", AsHTML(controllers.FAQ(faqTemplate)))
 	router.NotFound(AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}))
