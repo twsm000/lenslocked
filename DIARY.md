@@ -73,3 +73,4 @@
 - Dynamic FAQ Page
 - Reusable Layouts
 - Tailwind CSS
+- Utility-first CSS
