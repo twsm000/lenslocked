@@ -68,3 +68,4 @@
 ## Chapter 7 - Enhancing Our Views
 
 - Embedding Templates Files
+- Variadic Parameters
