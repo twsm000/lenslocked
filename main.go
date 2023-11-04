@@ -31,10 +31,14 @@ func main() {
 	Run(&server)
 }
 
+func ApplyHTML(page ...string) []string {
+	return append([]string{"layout.tailwind.html", "footer.html"}, page...)
+}
+
 func NewRouter() http.Handler {
-	homeTemplate := MustGet(views.ParseFSTemplate(templates.FS, "home.html"))
-	contactTemplate := MustGet(views.ParseFSTemplate(templates.FS, "contact.html"))
-	faqTemplate := MustGet(views.ParseFSTemplate(templates.FS, "faq.html"))
+	homeTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("home.html")...))
+	contactTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("contact.html")...))
+	faqTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("faq.html")...))
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTemplate)))
