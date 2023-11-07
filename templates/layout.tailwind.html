@@ -6,7 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Lenslocked</title>
   </head>
-<body>
+<body class="flex flex-col min-h-screen">
     <header class="bg-gradient-to-r from-indigo-900 to-blue-800 text-white">
       <nav class="px-8 py-6 flex items-center">
         <div class="text-4xl pr-12 font-serif hover:text-blue-300"><a href="/">📸 Lenslocked</a></div>
@@ -22,7 +22,7 @@
       </nav>
     </header>
     {{template "inner-body-page" .}}
-    <footer>
+    <footer class="mt-auto">
       {{template "footer" .}}
     </footer>
 </body>
