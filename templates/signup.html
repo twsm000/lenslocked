@@ -1,0 +1,15 @@
+{{define "inner-body-page"}}
+<form action="/users" method="post">
+    <div>
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" placeholder="Email address" required autocomplete="email">
+    </div>
+    <div>
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" placeholder="Password" required>
+    </div>
+    <div>
+        <button type="submit">Sign up</button>
+    </div>
+</form>
+{{end}}

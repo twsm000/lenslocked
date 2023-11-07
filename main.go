@@ -39,11 +39,14 @@ func NewRouter() http.Handler {
 	homeTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("home.html")...))
 	contactTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("contact.html")...))
 	faqTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("faq.html")...))
+	signupTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("signup.html")...))
+
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTemplate)))
 	router.Get("/contact", AsHTML(controllers.StaticTemplateHandler(contactTemplate)))
 	router.Get("/faq", AsHTML(controllers.FAQ(faqTemplate)))
+	router.Get("/signup", AsHTML(controllers.StaticTemplateHandler(signupTemplate)))
 	router.NotFound(AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}))
