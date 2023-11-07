@@ -25,7 +25,7 @@ tasks:
       - r
     cmds:
       - task: b
-      - ./bin/lenslocked {{.CLI_ARGS}}
+      - air -d -c .air.toml
 
   test:
     aliases:

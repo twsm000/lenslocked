@@ -4,9 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Title</title>
+    <title>Lenslocked</title>
   </head>
 <body>
+    <header class="bg-gradient-to-r from-indigo-900 to-blue-800 text-white">
+      <nav class="px-8 py-6 flex items-center">
+        <div class="text-4xl pr-12 font-serif hover:text-blue-300"><a href="/">📸 Lenslocked</a></div>
+        <div class="flex-grow">
+          <a class="text-lg font-semibold hover:text-blue-300 pr-8" href="/">Home</a>
+          <a class="text-lg font-semibold hover:text-blue-300 pr-8" href="/contact">Contact</a>
+          <a class="text-lg font-semibold hover:text-blue-300 pr-8" href="/faq">FAQ</a>
+        </div>
+        <div>
+          <a class="px-4 font-semibold hover:text-blue-300" href="signin">Sign in</a>
+          <a class="px-4 py-2 font-semibold bg-indigo-700 hover:bg-blue-400 hover:text-black rounded" href="/signup">Sign up</a>
+        </div>
+      </nav>
+    </header>
     {{template "inner-body-page" .}}
     <footer>
       {{template "footer" .}}

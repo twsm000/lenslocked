@@ -74,3 +74,4 @@
 - Reusable Layouts
 - Tailwind CSS
 - Utility-first CSS
+- Adding a Navigation Bar
