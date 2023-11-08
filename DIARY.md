@@ -80,3 +80,4 @@
 ## Chapter 8 - The Signup Page
 
 - Creating the Signup Page
+- Styling the Signup Page
