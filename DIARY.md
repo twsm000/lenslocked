@@ -82,3 +82,4 @@
 - Creating the Signup Page
 - Styling the Signup Page
 - Intro to REST
+- Users Controllers
