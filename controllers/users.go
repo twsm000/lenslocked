@@ -2,13 +2,11 @@ package controllers
 
 import (
 	"net/http"
-
-	"github.com/twsm000/lenslocked/views"
 )
 
 type Users struct {
 	Templates struct {
-		SignUpPage *views.Template
+		SignUpPage Template
 	}
 }
 
