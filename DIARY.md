@@ -94,3 +94,4 @@
 - Installing Postgres
 - Connecting to Postgres
 - Update: Docker Container Names
+- Creating SQL Tables
