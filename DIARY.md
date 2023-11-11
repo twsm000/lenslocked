@@ -97,3 +97,4 @@
 - Creating SQL Tables
 - Postgres Data Types
 - Postgres Constraints
+- Creating Users Table
