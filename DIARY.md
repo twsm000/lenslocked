@@ -87,3 +87,7 @@
 - Parsing the Signup Form
 - URL Query Params
 - Exercises
+
+## Chapter 9 - Database and PostgreSQL
+
+- Intro to Databases
