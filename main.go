@@ -53,6 +53,10 @@ func NewRouter() http.Handler {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}))
 
+	router.Route("/users", func(r chi.Router) {
+		r.Post("/", usersController.Create)
+	})
+
 	return router
 }
 
