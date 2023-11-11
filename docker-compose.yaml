@@ -2,23 +2,29 @@ version: "3.9"
 
 services:
   db:
-    container_name: dblenslocked
+    network_mode: "host"
+    container_name: lenslocked
     image: postgres
     restart: always
     platform: linux/amd64
     environment:
-      POSTGRES_DB: lenslocked
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: lenslocked-secret
+      - POSTGRES_DB=lenslocked
+      - POSTGRES_USER=lenslocked
+      - POSTGRES_PASSWORD=lenslocked
+      - PG_TRUST_LOCALNET=true
     volumes:
       - ./testdata/dockervolume/pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
-  adminer:
-    image: adminer
+  pgadmin:
+    network_mode: "host"
+    container_name: pgadmin
+    image: dpage/pgadmin4
     restart: always
     environment:
-      ADMINER_DESIGN: dracula
-    ports:
-      - 3333:8080
+      - PGADMIN_DEFAULT_EMAIL=admin@pg.com
+      - PGADMIN_DEFAULT_PASSWORD=pgadmin
+    volumes:
+      - ./testdata/dockervolume/pgadmindata:/var/lib/pgadmin
+      # run: $ sudo chown -R 5050:5050 ./testdata/dockervolume/pgadmindata
+    depends_on:
+      - db
