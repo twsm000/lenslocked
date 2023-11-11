@@ -96,3 +96,4 @@
 - Update: Docker Container Names
 - Creating SQL Tables
 - Postgres Data Types
+- Postgres Constraints
