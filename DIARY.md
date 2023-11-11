@@ -101,3 +101,4 @@
 - Inserting Records
   TZ and PGTZ was added to fix database CURRENT_TIMESTAMP;
 - Querying Records
+- Filtering Queries
