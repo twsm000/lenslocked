@@ -91,3 +91,4 @@
 ## Chapter 9 - Database and PostgreSQL
 
 - Intro to Databases
+- Installing Postgres
