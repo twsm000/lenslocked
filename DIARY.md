@@ -93,3 +93,4 @@
 - Intro to Databases
 - Installing Postgres
 - Connecting to Postgres
+- Update: Docker Container Names
