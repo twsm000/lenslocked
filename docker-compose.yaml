@@ -12,6 +12,8 @@ services:
       - POSTGRES_USER=lenslocked
       - POSTGRES_PASSWORD=lenslocked
       - PG_TRUST_LOCALNET=true
+      - TZ=America/Sao_Paulo
+      - PGTZ=America/Sao_Paulo
     volumes:
       - ./testdata/dockervolume/pgdata:/var/lib/postgresql/data
 

@@ -98,3 +98,5 @@
 - Postgres Data Types
 - Postgres Constraints
 - Creating Users Table
+- Inserting Records
+  TZ and PGTZ was added to fix database CURRENT_TIMESTAMP;
