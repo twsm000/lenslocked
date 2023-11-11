@@ -104,3 +104,4 @@
 - Filtering Queries
 - Updating Records
 - Deleting Records
+- Additional SQL Resources
