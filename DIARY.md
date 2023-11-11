@@ -103,3 +103,4 @@
 - Querying Records
 - Filtering Queries
 - Updating Records
+- Deleting Records
