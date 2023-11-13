@@ -105,3 +105,7 @@
 - Updating Records
 - Deleting Records
 - Additional SQL Resources
+
+## Chapter 10 - Using Postgres with Go
+
+- Connecting to Postgres with GO

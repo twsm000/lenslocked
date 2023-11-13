@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -16,6 +17,8 @@ import (
 	"github.com/twsm000/lenslocked/controllers"
 	"github.com/twsm000/lenslocked/templates"
 	"github.com/twsm000/lenslocked/views"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 var (
@@ -24,9 +27,16 @@ var (
 )
 
 func main() {
+	db := MustGet(newDBConnection())
+	defer func() {
+		logInfo.Println("Closing database...")
+		if err := db.Close(); err != nil {
+			logError.Println("Database close error:", err)
+		}
+	}()
 	server := http.Server{
 		Addr:    ":8080",
-		Handler: NewRouter(),
+		Handler: NewRouter(db),
 	}
 	Run(&server)
 }
@@ -35,7 +45,7 @@ func ApplyHTML(page ...string) []string {
 	return append([]string{"layout.tailwind.html", "footer.html"}, page...)
 }
 
-func NewRouter() http.Handler {
+func NewRouter(db *sql.DB) http.Handler {
 	homeTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("home.html")...))
 	contactTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("contact.html")...))
 	faqTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("faq.html")...))
@@ -81,10 +91,28 @@ func Run(server *http.Server) {
 	fmt.Println("Bye...")
 }
 
+func newDBConnection() (*sql.DB, error) {
+	dsName := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		"localhost",
+		5432,
+		"lenslocked",
+		"lenslocked",
+		"lenslocked",
+	)
+	db, err := sql.Open("pgx", dsName)
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
+}
+
 func executeTemplate(w http.ResponseWriter, fpath string) {
 	tmpl, err := views.ParseTemplate(fpath)
 	if err != nil {
-		log.Println("failed to parse error:", err)
+		logInfo.Println("failed to parse error:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
