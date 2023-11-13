@@ -81,7 +81,6 @@ func Run(server *http.Server) {
 	gracefullyShutdown := make(chan os.Signal, 1)
 	signal.Notify(gracefullyShutdown, syscall.SIGINT, syscall.SIGTERM)
 	<-gracefullyShutdown
-
 	logInfo.Println("Closing http server gracefully.")
 	shutdownServerCtx, closeServer := context.WithTimeout(context.Background(), 10*time.Second)
 	defer closeServer()
@@ -92,14 +91,15 @@ func Run(server *http.Server) {
 }
 
 func newDBConnection() (*sql.DB, error) {
-	dsName := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		"localhost",
-		5432,
-		"lenslocked",
-		"lenslocked",
-		"lenslocked",
-	)
-	db, err := sql.Open("pgx", dsName)
+	cfg := PostgresConfig{
+		Host:     "localhost",
+		Port:     5432,
+		User:     "lenslocked",
+		Password: "lenslocked",
+		Database: "lenslocked",
+		SSLMode:  "disable",
+	}
+	db, err := sql.Open("pgx", cfg.DataSourceName())
 	if err != nil {
 		return nil, err
 	}
@@ -133,4 +133,23 @@ func MustGet[T any](t T, err error) T {
 		panic(err)
 	}
 	return t
+}
+
+type PostgresConfig struct {
+	Host     string
+	Port     uint16
+	User     string
+	Password string
+	Database string
+	SSLMode  string
+}
+
+func (pc PostgresConfig) DataSourceName() string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		"localhost",
+		5432,
+		"lenslocked",
+		"lenslocked",
+		"lenslocked",
+	)
 }
