@@ -112,3 +112,4 @@
 - Importing with Side Effects
 - Postgres Config Type
 - Executing SQL with GO
+- Inserting Records
