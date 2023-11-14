@@ -129,3 +129,4 @@
 - What is a Hash Function
 - Store Password Hashes
 - Salt Passwords
+- Learning bcrypt with a CLI
