@@ -117,3 +117,4 @@
 - Acquiring New Record IDs
 - Querying a Single Record
 - Creating Sample Orders
+- Querying Multiple Records
