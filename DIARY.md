@@ -121,3 +121,7 @@
 - ORMs vs SQL
 - Exercises: SQL with GO
 - Syncing the Source Code
+
+## Chapter 11 - Securing Passwords
+
+- Steps for Securing Passwords
