@@ -125,3 +125,4 @@
 ## Chapter 11 - Securing Passwords
 
 - Steps for Securing Passwords
+- Third Party Authentication Options
