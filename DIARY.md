@@ -120,3 +120,4 @@
 - Querying Multiple Records
 - ORMs vs SQL
 - Exercises: SQL with GO
+- Syncing the Source Code
