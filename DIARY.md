@@ -114,3 +114,4 @@
 - Executing SQL with GO
 - Inserting Records
 - SQL Injection
+- Acquiring New Record IDs
