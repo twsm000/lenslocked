@@ -128,3 +128,4 @@
 - Third Party Authentication Options
 - What is a Hash Function
 - Store Password Hashes
+- Salt Passwords
