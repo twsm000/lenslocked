@@ -119,3 +119,4 @@
 - Creating Sample Orders
 - Querying Multiple Records
 - ORMs vs SQL
+- Exercises: SQL with GO
