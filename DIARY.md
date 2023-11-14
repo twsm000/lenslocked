@@ -111,3 +111,4 @@
 - Connecting to Postgres with GO
 - Importing with Side Effects
 - Postgres Config Type
+- Executing SQL with GO
