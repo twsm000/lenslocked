@@ -130,3 +130,4 @@
 - Store Password Hashes
 - Salt Passwords
 - Learning bcrypt with a CLI
+- Hashing Passwords with bcrypt
