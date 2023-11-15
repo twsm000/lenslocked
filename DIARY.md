@@ -132,3 +132,8 @@
 - Learning bcrypt with a CLI
 - Hashing Passwords with bcrypt
 - Comparing a Password with a bcrypt Hash
+
+## Chapter 12 - Adding our User to our App
+
+- Defining our User Model
+- Creating the UserService
