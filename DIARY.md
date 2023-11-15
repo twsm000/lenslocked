@@ -137,3 +137,4 @@
 
 - Defining our User Model
 - Creating the UserService
+- Create User Method

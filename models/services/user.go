@@ -11,5 +11,10 @@ type UserService struct {
 
 func (us UserService) Create(input *entities.UserCreatable) (*entities.User, error) {
 	// todo: validate data
-	return us.Repository.Create(input)
+	var user entities.User
+	user.Email.Set(input.Email)
+	if err := user.PasswordHash.GenerateFrom(input.Password); err != nil {
+		return nil, err
+	}
+	return us.Repository.Create(&user)
 }
