@@ -131,3 +131,4 @@
 - Salt Passwords
 - Learning bcrypt with a CLI
 - Hashing Passwords with bcrypt
+- Comparing a Password with a bcrypt Hash
