@@ -15,6 +15,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/twsm000/lenslocked/controllers"
+	"github.com/twsm000/lenslocked/models/database"
+	"github.com/twsm000/lenslocked/models/database/postgres"
 	"github.com/twsm000/lenslocked/templates"
 	"github.com/twsm000/lenslocked/views"
 
@@ -27,13 +29,22 @@ var (
 )
 
 func main() {
-	db := MustGet(newDBConnection())
+	db := MustGet(database.NewConnection(postgres.Config{
+		Driver:   "pgx",
+		Host:     "localhost",
+		Port:     5432,
+		User:     "lenslocked",
+		Password: "lenslocked",
+		Database: "lenslocked",
+		SSLMode:  "disable",
+	}))
 	defer func() {
 		logInfo.Println("Closing database...")
 		if err := db.Close(); err != nil {
 			logError.Println("Database close error:", err)
 		}
 	}()
+
 	server := http.Server{
 		Addr:    ":8080",
 		Handler: NewRouter(db),
@@ -90,29 +101,10 @@ func Run(server *http.Server) {
 	fmt.Println("Bye...")
 }
 
-func newDBConnection() (*sql.DB, error) {
-	cfg := PostgresConfig{
-		Host:     "localhost",
-		Port:     5432,
-		User:     "lenslocked",
-		Password: "lenslocked",
-		Database: "lenslocked",
-		SSLMode:  "disable",
-	}
-	db, err := sql.Open("pgx", cfg.DataSourceName())
-	if err != nil {
-		return nil, err
-	}
-	if err = db.Ping(); err != nil {
-		return nil, err
-	}
-	return db, nil
-}
-
 func executeTemplate(w http.ResponseWriter, fpath string) {
 	tmpl, err := views.ParseTemplate(fpath)
 	if err != nil {
-		logInfo.Println("failed to parse error:", err)
+		logError.Println("failed to parse error:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -133,23 +125,4 @@ func MustGet[T any](t T, err error) T {
 		panic(err)
 	}
 	return t
-}
-
-type PostgresConfig struct {
-	Host     string
-	Port     uint16
-	User     string
-	Password string
-	Database string
-	SSLMode  string
-}
-
-func (pc PostgresConfig) DataSourceName() string {
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		"localhost",
-		5432,
-		"lenslocked",
-		"lenslocked",
-		"lenslocked",
-	)
 }
