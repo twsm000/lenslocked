@@ -3,15 +3,18 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/twsm000/lenslocked/models/services"
 )
 
-type Users struct {
+type User struct {
 	Templates struct {
 		SignUpPage Template
 	}
+	UserService services.User
 }
 
-func (u Users) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
+func (u User) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		Email string
 	}
@@ -19,7 +22,7 @@ func (u Users) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
 	u.Templates.SignUpPage.Execute(w, data)
 }
 
-func (u Users) Create(w http.ResponseWriter, r *http.Request) {
+func (u User) Create(w http.ResponseWriter, r *http.Request) {
 	email := r.PostFormValue("email")
 	password := r.PostFormValue("password")
 

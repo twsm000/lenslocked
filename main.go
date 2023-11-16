@@ -17,6 +17,8 @@ import (
 	"github.com/twsm000/lenslocked/controllers"
 	"github.com/twsm000/lenslocked/models/database"
 	"github.com/twsm000/lenslocked/models/database/postgres"
+	"github.com/twsm000/lenslocked/models/repositories/postgresrepo"
+	"github.com/twsm000/lenslocked/models/services"
 	"github.com/twsm000/lenslocked/templates"
 	"github.com/twsm000/lenslocked/views"
 
@@ -62,20 +64,24 @@ func NewRouter(db *sql.DB) http.Handler {
 	faqTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("faq.html")...))
 	signupTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("signup.html")...))
 
-	usersController := controllers.Users{}
-	usersController.Templates.SignUpPage = signupTemplate
+	userController := controllers.User{
+		UserService: services.User{
+			Repository: MustGet(postgresrepo.NewUserRepository(db)),
+		},
+	}
+	userController.Templates.SignUpPage = signupTemplate
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTemplate)))
 	router.Get("/contact", AsHTML(controllers.StaticTemplateHandler(contactTemplate)))
 	router.Get("/faq", AsHTML(controllers.FAQ(faqTemplate)))
-	router.Get("/signup", AsHTML(usersController.SignUpPageHandler))
+	router.Get("/signup", AsHTML(userController.SignUpPageHandler))
 	router.NotFound(AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}))
 
 	router.Route("/users", func(r chi.Router) {
-		r.Post("/", usersController.Create)
+		r.Post("/", userController.Create)
 	})
 
 	return router

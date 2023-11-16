@@ -16,7 +16,7 @@ const (
 	`
 )
 
-func NewUserRepository(db *sql.DB) (repositories.UserRepository, error) {
+func NewUserRepository(db *sql.DB) (repositories.User, error) {
 	insertUserStmt, err := db.Prepare(insertUser)
 	if err != nil {
 		return nil, err

@@ -139,3 +139,4 @@
 - Creating the UserService
 - Create User Method
 - PostgresConfig for the Models Package
+- UserService in the UserController
