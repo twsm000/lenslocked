@@ -15,6 +15,7 @@ type User struct {
 	LogError  *log.Logger
 	Templates struct {
 		SignUpPage Template
+		SignInPage Template
 	}
 	UserService interface {
 		Create(input entities.UserCreatable) (*entities.User, error)
@@ -27,6 +28,14 @@ func (uc User) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	data.Email = r.FormValue("email")
 	uc.Templates.SignUpPage.Execute(w, data)
+}
+
+func (uc User) SignInPageHandler(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	uc.Templates.SignInPage.Execute(w, data)
 }
 
 func (uc User) Create(w http.ResponseWriter, r *http.Request) {

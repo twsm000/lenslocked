@@ -63,19 +63,24 @@ func NewRouter(db *sql.DB) http.Handler {
 	contactTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("contact.html")...))
 	faqTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("faq.html")...))
 	signupTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("signup.html")...))
+	signinTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("signin.html")...))
 
 	userController := controllers.User{
+		LogInfo:  logInfo,
+		LogError: logError,
 		UserService: services.User{
 			Repository: MustGet(postgresrepo.NewUserRepository(db)),
 		},
 	}
 	userController.Templates.SignUpPage = signupTemplate
+	userController.Templates.SignInPage = signinTemplate
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTemplate)))
 	router.Get("/contact", AsHTML(controllers.StaticTemplateHandler(contactTemplate)))
 	router.Get("/faq", AsHTML(controllers.FAQ(faqTemplate)))
 	router.Get("/signup", AsHTML(userController.SignUpPageHandler))
+	router.Get("/signin", AsHTML(userController.SignInPageHandler))
 	router.NotFound(AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}))
