@@ -140,3 +140,4 @@
 - Create User Method
 - PostgresConfig for the Models Package
 - UserService in the UserController
+- Create Users on the Signup

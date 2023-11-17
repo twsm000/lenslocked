@@ -9,12 +9,14 @@ type User struct {
 	Repository repositories.User
 }
 
-func (s User) Create(input *entities.UserCreatable) (*entities.User, error) {
-	// todo: validate data
+func (us User) Create(input entities.UserCreatable) (*entities.User, error) {
 	var user entities.User
 	user.Email.Set(input.Email)
 	if err := user.PasswordHash.GenerateFrom(input.Password); err != nil {
 		return nil, err
 	}
-	return s.Repository.Create(&user)
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+	return us.Repository.Create(&user)
 }

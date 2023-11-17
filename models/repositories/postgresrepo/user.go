@@ -34,7 +34,7 @@ type userRepository struct {
 
 func (ur *userRepository) Create(input *entities.User) (*entities.User, error) {
 	if input == nil {
-		return nil, errors.New("invalid user")
+		return nil, entities.ErrInvalidUser
 	}
 
 	row := ur.insertUserStmt.QueryRow(input.Email, input.PasswordHash.AsBytes())
@@ -43,7 +43,7 @@ func (ur *userRepository) Create(input *entities.User) (*entities.User, error) {
 		&input.CreatedAt,
 	)
 	if err != nil {
-		return nil, errors.Join(errors.New("failed to create user"), err)
+		return nil, errors.Join(repositories.ErrFailedToCreateUser, err)
 	}
 	return input, nil
 }
