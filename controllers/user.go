@@ -76,11 +76,11 @@ func (uc User) Authenticate(w http.ResponseWriter, r *http.Request) {
 	user, err := uc.UserService.Authenticate(authCredentials)
 	if err != nil {
 		switch {
-		case errors.Is(err, entities.ErrInvalidUserEmail):
-			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		case errors.Is(err, entities.ErrInvalidUserPassword):
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 
 		case errors.Is(err, services.ErrInvalidAuthCredentials):
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 
 		default:
 			err = errors.Join(ErrUntracked, err)
