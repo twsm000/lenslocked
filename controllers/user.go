@@ -90,5 +90,11 @@ func (uc User) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cookie := http.Cookie{
+		Name:  "email",
+		Value: user.Email.String(),
+		Path:  "/",
+	}
+	http.SetCookie(w, &cookie)
 	fmt.Fprintf(w, "%+v", user)
 }

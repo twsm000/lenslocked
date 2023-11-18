@@ -148,3 +148,4 @@
 ## Chapter 13 - Remembering Users with Cookies
 
 - Stateless Servers
+- Creating Cookies
