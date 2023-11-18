@@ -149,3 +149,4 @@
 
 - Stateless Servers
 - Creating Cookies
+- Viewing Cookies with Chrome
