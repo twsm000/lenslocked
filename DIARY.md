@@ -144,3 +144,7 @@
 - Sign in View
 - Authenticate Users
 - Process Sign In Attempts
+
+## Chapter 13 - Remembering Users with Cookies
+
+- Stateless Servers
