@@ -142,3 +142,4 @@
 - UserService in the UserController
 - Create Users on the Signup
 - Sign in View
+- Authenticate Users

@@ -2,6 +2,7 @@ package entities
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -54,6 +55,20 @@ func (e Email) String() string {
 	return e.email
 }
 
+func (e *Email) Scan(value any) error {
+	if value == nil {
+		e.email = ""
+		return nil
+	}
+
+	email, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("invalid scan type: %T", value)
+	}
+	e.Set(email)
+	return nil
+}
+
 const hiddenPassword string = "********"
 
 type UserPasswordHash []byte
@@ -64,6 +79,13 @@ func (up UserPasswordHash) AsBytes() []byte {
 
 func (up UserPasswordHash) String() string {
 	return hiddenPassword
+}
+
+func (up UserPasswordHash) Compare(password []byte) error {
+	if err := bcrypt.CompareHashAndPassword(up, password); err != nil {
+		return errors.Join(ErrInvalidUserPassword, err)
+	}
+	return nil
 }
 
 var ErrUserPasswordHash = errors.New("failed to hash user password")
@@ -79,5 +101,10 @@ func (up *UserPasswordHash) GenerateFrom(password []byte) error {
 
 type UserCreatable struct {
 	Email    string
+	Password []byte
+}
+
+type UserAuthenticator struct {
+	Email    Email
 	Password []byte
 }

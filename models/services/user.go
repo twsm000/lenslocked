@@ -1,6 +1,8 @@
 package services
 
 import (
+	"errors"
+
 	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/repositories"
 )
@@ -19,4 +21,15 @@ func (us User) Create(input entities.UserCreatable) (*entities.User, error) {
 		return nil, err
 	}
 	return us.Repository.Create(&user)
+}
+
+func (us User) Authenticate(input entities.UserAuthenticator) (*entities.User, error) {
+	user, err := us.Repository.FindByEmail(input.Email)
+	if err != nil {
+		return nil, err
+	}
+	if err := user.PasswordHash.Compare(input.Password); err != nil {
+		return nil, errors.Join(ErrInvalidAuthCredentials, err)
+	}
+	return user, nil
 }
