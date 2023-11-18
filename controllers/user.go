@@ -8,6 +8,7 @@ import (
 
 	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/repositories"
+	"github.com/twsm000/lenslocked/models/services"
 )
 
 type User struct {
@@ -19,6 +20,7 @@ type User struct {
 	}
 	UserService interface {
 		Create(input entities.UserCreatable) (*entities.User, error)
+		Authenticate(input entities.UserAuthenticable) (*entities.User, error)
 	}
 }
 
@@ -39,10 +41,11 @@ func (uc User) SignInPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (uc User) Create(w http.ResponseWriter, r *http.Request) {
-	user, err := uc.UserService.Create(entities.UserCreatable{
-		Email:    r.PostFormValue("email"),
-		Password: []byte(r.PostFormValue("password")),
-	})
+	var userInput entities.UserCreatable
+	userInput.Email.Set(r.PostFormValue("email"))
+	userInput.Password.Set(r.PostFormValue("password"))
+
+	user, err := uc.UserService.Create(userInput)
 	if err != nil {
 		switch {
 		case errors.Is(err, entities.ErrInvalidUserEmail) ||
@@ -50,11 +53,12 @@ func (uc User) Create(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 
 		case errors.Is(err, entities.ErrInvalidUser) ||
-			errors.Is(err, entities.ErrUserPasswordHash) ||
+			errors.Is(err, entities.ErrFailedToHashPassword) ||
 			errors.Is(err, repositories.ErrFailedToCreateUser):
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
 		default:
-			err = errors.Join(errors.New("untracked error"), err)
+			err = errors.Join(ErrUntracked, err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 		uc.LogError.Println(err)
@@ -62,4 +66,29 @@ func (uc User) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "user created: %+v\n", user)
+}
+
+func (uc User) Authenticate(w http.ResponseWriter, r *http.Request) {
+	var authCredentials entities.UserAuthenticable
+	authCredentials.Email.Set(r.PostFormValue("email"))
+	authCredentials.Password.Set(r.PostFormValue("password"))
+
+	user, err := uc.UserService.Authenticate(authCredentials)
+	if err != nil {
+		switch {
+		case errors.Is(err, entities.ErrInvalidUserEmail):
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+
+		case errors.Is(err, services.ErrInvalidAuthCredentials):
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+
+		default:
+			err = errors.Join(ErrUntracked, err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+		uc.LogError.Println(err)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v", user)
 }
