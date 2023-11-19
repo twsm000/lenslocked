@@ -153,3 +153,4 @@
 - Viewing Cookies with Go
 - Cookie and XSS
 - Cookie Theft
+- CSRF Attacks
