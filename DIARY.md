@@ -152,3 +152,4 @@
 - Viewing Cookies with Chrome
 - Viewing Cookies with Go
 - Cookie and XSS
+- Cookie Theft
