@@ -131,17 +131,6 @@ func Run(server *http.Server) {
 	fmt.Println("Bye...")
 }
 
-func executeTemplate(w http.ResponseWriter, fpath string) {
-	tmpl, err := views.ParseTemplate(fpath)
-	if err != nil {
-		logError.Println("failed to parse error:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	tmpl.Execute(w, nil)
-}
-
 // AsHTML set the response header Content-Type to text/html
 func AsHTML(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

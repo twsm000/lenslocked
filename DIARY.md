@@ -156,3 +156,4 @@
 - CSRF Attacks
 - CSRF Middleware
 - Providing CSRF to Templates via Data
+- Custom Template Functions

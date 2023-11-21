@@ -8,16 +8,14 @@ import (
 	"net/http"
 )
 
-func ParseTemplate(fpath string) (*Template, error) {
-	tmpl, err := template.ParseFiles(fpath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse template: %w", err)
-	}
-	return &Template{htmlTmpl: tmpl}, nil
-}
-
 func ParseFSTemplate(fs fs.FS, pattern ...string) (*Template, error) {
-	tmpl, err := template.ParseFS(fs, pattern...)
+	tmpl := template.New(pattern[0])
+	tmpl = tmpl.Funcs(template.FuncMap{
+		"CSRFField": func() template.HTML {
+			return `<input type="hidden"/>`
+		},
+	})
+	tmpl, err := tmpl.ParseFS(fs, pattern...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse fs template: %w", err)
 	}
