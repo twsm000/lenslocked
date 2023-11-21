@@ -25,7 +25,7 @@ tasks:
       - r
     cmds:
       - task: b
-      - air -d -c .air.toml
+      - air -d -c .air.dev.toml
 
   test:
     aliases:

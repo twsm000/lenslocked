@@ -154,3 +154,4 @@
 - Cookie and XSS
 - Cookie Theft
 - CSRF Attacks
+- CSRF Middleware

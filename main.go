@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,6 +23,7 @@ import (
 	"github.com/twsm000/lenslocked/templates"
 	"github.com/twsm000/lenslocked/views"
 
+	"github.com/gorilla/csrf"
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
@@ -31,6 +33,17 @@ var (
 )
 
 func main() {
+	csrfAuthKey := flag.String("csrf-auth", "", "CSRF Auth Key (32 bytes - Mandatory)")
+	secureCookie := flag.Bool("secure-cookie", true, "Secure the cookie when use https (CSRF Protection)")
+	flag.Parse()
+	csrfAuthKeyData := []byte(*csrfAuthKey)
+	if len(csrfAuthKeyData) != 32 {
+		log.Println("-csrf-auth needs to be 32 bytes")
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	logInfo.Println("Secure-Cookie:", *secureCookie)
 	db := MustGet(database.NewConnection(postgres.Config{
 		Driver:   "pgx",
 		Host:     "localhost",
@@ -49,7 +62,7 @@ func main() {
 
 	server := http.Server{
 		Addr:    ":8080",
-		Handler: NewRouter(db),
+		Handler: NewRouter(db, csrfAuthKeyData, *secureCookie),
 	}
 	Run(&server)
 }
@@ -58,7 +71,7 @@ func ApplyHTML(page ...string) []string {
 	return append([]string{"layout.tailwind.html", "footer.html"}, page...)
 }
 
-func NewRouter(db *sql.DB) http.Handler {
+func NewRouter(db *sql.DB, csrfAuthKey []byte, secureCookie bool) http.Handler {
 	homeTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("home.html")...))
 	contactTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("contact.html")...))
 	faqTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("faq.html")...))
@@ -90,7 +103,12 @@ func NewRouter(db *sql.DB) http.Handler {
 		r.Post("/", userController.Create)
 	})
 
-	return router
+	csrfMiddleware := csrf.Protect(
+		csrfAuthKey,
+		csrf.Secure(secureCookie),
+	)
+
+	return csrfMiddleware(router)
 }
 
 func Run(server *http.Server) {
