@@ -3,9 +3,11 @@ package controllers
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
+	"github.com/gorilla/csrf"
 	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/repositories"
 	"github.com/twsm000/lenslocked/models/services"
@@ -26,9 +28,11 @@ type User struct {
 
 func (uc User) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
 	var data struct {
-		Email string
+		Email     string
+		CSRFField template.HTML
 	}
 	data.Email = r.FormValue("email")
+	data.CSRFField = csrf.TemplateField(r)
 	uc.Templates.SignUpPage.Execute(w, data)
 }
 

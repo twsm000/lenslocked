@@ -155,3 +155,4 @@
 - Cookie Theft
 - CSRF Attacks
 - CSRF Middleware
+- Providing CSRF to Templates via Data
