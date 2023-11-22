@@ -7,7 +7,7 @@ import (
 
 func StaticTemplateHandler(tmpl Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tmpl.Execute(w, nil)
+		tmpl.Execute(w, r, nil)
 	}
 }
 
@@ -31,6 +31,6 @@ func FAQ(tmpl Template) http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		tmpl.Execute(w, questions)
+		tmpl.Execute(w, r, questions)
 	}
 }

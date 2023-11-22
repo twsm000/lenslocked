@@ -26,7 +26,7 @@ type Template struct {
 	htmlTmpl *template.Template
 }
 
-func (t *Template) Execute(w http.ResponseWriter, data any) {
+func (t *Template) Execute(w http.ResponseWriter, r *http.Request, data any) {
 	if err := t.htmlTmpl.Execute(w, data); err != nil {
 		log.Println("failed to execute template:", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
