@@ -158,3 +158,4 @@
 - Providing CSRF to Templates via Data
 - Custom Template Functions
 - Adding the HTTP Request to Execute
+- Request Specific CSRF Template Function
