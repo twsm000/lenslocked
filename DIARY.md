@@ -160,3 +160,4 @@
 - Adding the HTTP Request to Execute
 - Request Specific CSRF Template Function
 - Template Function Errors
+- Securing Cookies From Tempering
