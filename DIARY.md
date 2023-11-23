@@ -161,3 +161,7 @@
 - Request Specific CSRF Template Function
 - Template Function Errors
 - Securing Cookies From Tempering
+
+## Chapter 14 - Sessions
+
+- Random Strings with crypto/rand

@@ -91,6 +91,7 @@ func NewRouter(db *sql.DB, csrfAuthKey []byte, secureCookie bool) http.Handler {
 	userController.Templates.SignInPage = signinTemplate
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
 	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTemplate)))
 	router.Get("/contact", AsHTML(controllers.StaticTemplateHandler(contactTemplate)))
 	router.Get("/faq", AsHTML(controllers.FAQ(faqTemplate)))
