@@ -1,8 +1,11 @@
 package views
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -11,11 +14,15 @@ import (
 	"github.com/gorilla/csrf"
 )
 
-func ParseFSTemplate(fs fs.FS, pattern ...string) (*Template, error) {
+var (
+	ErrNotImplemented = errors.New("not implemented")
+)
+
+func ParseFSTemplate(logError *log.Logger, fs fs.FS, pattern ...string) (*Template, error) {
 	tmpl := template.New(pattern[0])
 	tmpl = tmpl.Funcs(template.FuncMap{
-		"CSRFField": func() template.HTML {
-			return `<input type="hidden"/>`
+		"CSRFField": func(req *http.Request) (template.HTML, error) {
+			return "", ErrNotImplemented
 		},
 	})
 	tmpl, err := tmpl.ParseFS(fs, pattern...)
@@ -23,6 +30,7 @@ func ParseFSTemplate(fs fs.FS, pattern ...string) (*Template, error) {
 		return nil, fmt.Errorf("failed to parse fs template: %w", err)
 	}
 	return &Template{
+		logError: logError,
 		htmlTmpl: tmpl,
 	}, nil
 }
@@ -30,6 +38,7 @@ func ParseFSTemplate(fs fs.FS, pattern ...string) (*Template, error) {
 type Template struct {
 	syncOnceFuncs sync.Once
 	htmlTmpl      *template.Template
+	logError      *log.Logger
 }
 
 func (t *Template) Execute(w http.ResponseWriter, r *http.Request, data any) {
@@ -46,9 +55,22 @@ func (t *Template) Execute(w http.ResponseWriter, r *http.Request, data any) {
 	}
 	reqData.Data = data
 	reqData.HTTPRequest = r
-	if err := t.htmlTmpl.Execute(w, reqData); err != nil {
-		log.Println("failed to execute template:", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	var buf bytes.Buffer
+	if err := t.htmlTmpl.Execute(&buf, reqData); err != nil {
+		t.logError.Println("Failed to execute template:", err)
+		cookie := http.Cookie{
+			Name:     "redirect",
+			Value:    fmt.Sprintf("%d", http.StatusInternalServerError),
+			Path:     "/500",
+			HttpOnly: true,
+			MaxAge:   1,
+		}
+		http.SetCookie(w, &cookie)
+		http.Redirect(w, r, "/500", http.StatusSeeOther)
 		return
+	}
+	_, err := io.Copy(w, &buf)
+	if err != nil {
+		t.logError.Println("Failed to send data to ResponseWriter:", err)
 	}
 }

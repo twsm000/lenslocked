@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -72,11 +73,12 @@ func ApplyHTML(page ...string) []string {
 }
 
 func NewRouter(db *sql.DB, csrfAuthKey []byte, secureCookie bool) http.Handler {
-	homeTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("home.html")...))
-	contactTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("contact.html")...))
-	faqTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("faq.html")...))
-	signupTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("signup.html")...))
-	signinTemplate := MustGet(views.ParseFSTemplate(templates.FS, ApplyHTML("signin.html")...))
+	homeTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("home.html")...))
+	contactTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("contact.html")...))
+	faqTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("faq.html")...))
+	signupTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signup.html")...))
+	signinTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signin.html")...))
+	IntrnSrvErrTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("500.html")...))
 
 	userController := controllers.User{
 		LogInfo:  logInfo,
@@ -97,6 +99,21 @@ func NewRouter(db *sql.DB, csrfAuthKey []byte, secureCookie bool) http.Handler {
 	router.Post("/signin", AsHTML(userController.Authenticate))
 	router.NotFound(AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	}))
+	router.Get("/500", AsHTML(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("redirect")
+		if err != nil ||
+			ExtractValue(strconv.Atoi(cookie.Value)) != http.StatusInternalServerError {
+			if err == nil {
+				logInfo.Printf("Cookie: %+v", cookie)
+			}
+			logError.Println("GET /500 EXPECT NOT FOUND")
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+
+		w.WriteHeader(http.StatusInternalServerError)
+		IntrnSrvErrTemplate.Execute(w, r, nil)
 	}))
 
 	router.Route("/users", func(r chi.Router) {
@@ -143,5 +160,9 @@ func MustGet[T any](t T, err error) T {
 	if err != nil {
 		panic(err)
 	}
+	return t
+}
+
+func ExtractValue[T any](t T, err error) T {
 	return t
 }
