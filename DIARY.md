@@ -166,3 +166,4 @@
 
 - Random Strings with crypto/rand
 - Exploring math/rand
+- Wrapping the crypto/rand Package
