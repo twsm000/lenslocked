@@ -165,3 +165,4 @@
 ## Chapter 14 - Sessions
 
 - Random Strings with crypto/rand
+- Exploring math/rand
