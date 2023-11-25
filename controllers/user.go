@@ -25,7 +25,7 @@ type User struct {
 	}
 	SessionService interface {
 		Create(userID uint64) (*entities.Session, error)
-		FindUserByToken(token entities.SessionToken) (*entities.User, error)
+		FindUserByToken(token string) (*entities.User, error)
 	}
 }
 
@@ -125,9 +125,7 @@ func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var token entities.SessionToken
-	token.Set(cookie.Value)
-	user, err := uc.SessionService.FindUserByToken(token)
+	user, err := uc.SessionService.FindUserByToken(cookie.Value)
 	if err != nil {
 		uc.LogError.Println(err)
 		http.Redirect(w, r, "/signup", http.StatusFound)

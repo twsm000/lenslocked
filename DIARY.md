@@ -172,3 +172,4 @@
 - Stubbing the SessionService
 - Sessions in the UserController
 - Cookie Helper Functions
+- Create Session Tokens

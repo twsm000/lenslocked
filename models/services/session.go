@@ -13,6 +13,11 @@ func (ss Session) Create(userID uint64) (*entities.Session, error) {
 	return ss.Repository.Create(userID)
 }
 
-func (ss Session) FindUserByToken(token entities.SessionToken) (*entities.User, error) {
-	return ss.Repository.FindUserByToken(token)
+func (ss Session) FindUserByToken(token string) (*entities.User, error) {
+	var stoken entities.SessionToken
+	err := stoken.Set(token)
+	if err != nil {
+		return nil, err
+	}
+	return ss.Repository.FindUserByToken(stoken)
 }
