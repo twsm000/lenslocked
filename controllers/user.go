@@ -80,7 +80,7 @@ func (uc User) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uc.LogInfo.Println("Session created:", session)
-	uc.setCookieSessionAndRedirect(w, r, session)
+	uc.createSessionCookieAndRedirect(w, r, session)
 }
 
 func (uc User) Authenticate(w http.ResponseWriter, r *http.Request) {
@@ -114,11 +114,11 @@ func (uc User) Authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uc.LogInfo.Println("Session created:", session)
-	uc.setCookieSessionAndRedirect(w, r, session)
+	uc.createSessionCookieAndRedirect(w, r, session)
 }
 
 func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session")
+	cookie, err := r.Cookie(CookieSession)
 	if err != nil {
 		uc.LogError.Println(err)
 		http.Redirect(w, r, "/signup", http.StatusFound)
@@ -139,17 +139,12 @@ func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Header: %+v\n", r.Header)
 }
 
-func (uc *User) setCookieSessionAndRedirect(
+func (uc *User) createSessionCookieAndRedirect(
 	w http.ResponseWriter,
 	r *http.Request,
-	session *entities.Session) {
-
-	cookie := http.Cookie{
-		Name:     "session",
-		Value:    session.Token.Value(),
-		Path:     "/",
-		HttpOnly: true,
-	}
-	http.SetCookie(w, &cookie)
+	session *entities.Session,
+) {
+	cookie := createSessionCookie(session)
+	http.SetCookie(w, cookie)
 	http.Redirect(w, r, "/users/me", http.StatusFound)
 }
