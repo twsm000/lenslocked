@@ -12,7 +12,15 @@ type User struct {
 }
 
 func (us User) Create(input entities.UserCreatable) (*entities.User, error) {
-	return us.Repository.Create(input)
+	user, err := entities.NewCreatableUser(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = us.Repository.Create(user); err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 // Authenticate possible errors:

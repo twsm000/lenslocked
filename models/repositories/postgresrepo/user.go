@@ -47,18 +47,13 @@ type userRepository struct {
 	findByEmailStmt *sql.Stmt
 }
 
-func (ur *userRepository) Create(input entities.UserCreatable) (*entities.User, error) {
-	user, err := entities.NewCreatableUser(input)
-	if err != nil {
-		return nil, err
-	}
-
+func (ur *userRepository) Create(user *entities.User) error {
 	row := ur.insertUserStmt.QueryRow(user.Email, user.Password.AsBytes())
 	if err := row.Scan(&user.ID, &user.CreatedAt); err != nil {
-		return nil, errors.Join(repositories.ErrFailedToCreateUser, err)
+		return errors.Join(repositories.ErrFailedToCreateUser, err)
 	}
 
-	return user, nil
+	return nil
 }
 
 func (ur *userRepository) FindByEmail(email entities.Email) (*entities.User, error) {

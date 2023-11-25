@@ -27,7 +27,7 @@ const (
 	`
 )
 
-func NewSessionRepository(db *sql.DB) (*sessionRepository, error) {
+func NewSessionRepository(db *sql.DB) (repositories.Session, error) {
 	insertSessionStmt, err := db.Prepare(insertSessionQuery)
 	if err != nil {
 		return nil, err
@@ -51,18 +51,13 @@ type sessionRepository struct {
 	findUserByTokenStmt *sql.Stmt
 }
 
-func (sr *sessionRepository) Create(userID uint64) (*entities.Session, error) {
-	session, err := entities.NewCreatableSession(userID)
-	if err != nil {
-		return nil, err
-	}
-
+func (sr *sessionRepository) Create(session *entities.Session) error {
 	row := sr.insertSessionStmt.QueryRow(session.UserID, session.Token.Hash())
 	if err := row.Scan(&session.ID, &session.CreatedAt); err != nil {
-		return nil, errors.Join(repositories.ErrFailedToCreateUser, err)
+		return errors.Join(repositories.ErrFailedToCreateSession, err)
 	}
 
-	return session, nil
+	return nil
 }
 
 func (sr *sessionRepository) FindUserByToken(token entities.SessionToken) (*entities.User, error) {

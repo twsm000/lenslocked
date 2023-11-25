@@ -23,10 +23,7 @@ type User struct {
 		Create(input entities.UserCreatable) (*entities.User, error)
 		Authenticate(input entities.UserAuthenticable) (*entities.User, error)
 	}
-	SessionService interface {
-		Create(userID uint64) (*entities.Session, error)
-		FindUserByToken(token string) (*entities.User, error)
-	}
+	SessionService services.Session
 }
 
 func (uc User) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {

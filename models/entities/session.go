@@ -12,9 +12,9 @@ type Session struct {
 	Token     SessionToken
 }
 
-func NewCreatableSession(userID uint64) (*Session, error) {
+func NewCreatableSession(userID uint64, bytesPerToken int) (*Session, error) {
 	var token SessionToken
-	err := token.UpdateDefault()
+	err := token.Update(bytesPerToken)
 	if err != nil {
 		return nil, err
 	}

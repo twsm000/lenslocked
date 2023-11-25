@@ -173,3 +173,4 @@
 - Sessions in the UserController
 - Cookie Helper Functions
 - Create Session Tokens
+- Refactor the rand package

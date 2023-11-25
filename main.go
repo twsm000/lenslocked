@@ -19,6 +19,7 @@ import (
 	"github.com/twsm000/lenslocked/controllers"
 	"github.com/twsm000/lenslocked/models/database"
 	"github.com/twsm000/lenslocked/models/database/postgres"
+	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/repositories/postgresrepo"
 	"github.com/twsm000/lenslocked/models/services"
 	"github.com/twsm000/lenslocked/templates"
@@ -36,6 +37,7 @@ var (
 func main() {
 	csrfAuthKey := flag.String("csrf-auth", "", "CSRF Auth Key (32 bytes - Mandatory)")
 	secureCookie := flag.Bool("secure-cookie", true, "Secure the cookie when use https (CSRF Protection)")
+	sessionTokenSize := flag.Int("session-token-size", entities.MinBytesPerSessionToken, "Size in bytes of the session tokens (Default 32 (min))")
 	flag.Parse()
 	csrfAuthKeyData := []byte(*csrfAuthKey)
 	if len(csrfAuthKeyData) != 32 {
@@ -45,6 +47,7 @@ func main() {
 	}
 
 	logInfo.Println("Secure-Cookie:", *secureCookie)
+	logInfo.Println("SessionTokenSize", *sessionTokenSize)
 	db := MustGet(database.NewConnection(postgres.Config{
 		Driver:   "pgx",
 		Host:     "localhost",
@@ -63,7 +66,7 @@ func main() {
 
 	server := http.Server{
 		Addr:    ":8080",
-		Handler: NewRouter(db, csrfAuthKeyData, *secureCookie),
+		Handler: NewRouter(db, csrfAuthKeyData, *secureCookie, *sessionTokenSize),
 	}
 	Run(&server)
 }
@@ -72,7 +75,12 @@ func ApplyHTML(page ...string) []string {
 	return append([]string{"layout.tailwind.html", "footer.html"}, page...)
 }
 
-func NewRouter(db *sql.DB, csrfAuthKey []byte, secureCookie bool) http.Handler {
+func NewRouter(
+	db *sql.DB,
+	csrfAuthKey []byte,
+	secureCookie bool,
+	bytesPerToken int,
+) http.Handler {
 	homeTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("home.html")...))
 	contactTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("contact.html")...))
 	faqTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("faq.html")...))
@@ -86,9 +94,10 @@ func NewRouter(db *sql.DB, csrfAuthKey []byte, secureCookie bool) http.Handler {
 		UserService: services.User{
 			Repository: MustGet(postgresrepo.NewUserRepository(db)),
 		},
-		SessionService: services.Session{
-			Repository: MustGet(postgresrepo.NewSessionRepository(db)),
-		},
+		SessionService: services.NewSession(
+			bytesPerToken,
+			MustGet(postgresrepo.NewSessionRepository(db)),
+		),
 	}
 	userController.Templates.SignUpPage = signupTemplate
 	userController.Templates.SignInPage = signinTemplate

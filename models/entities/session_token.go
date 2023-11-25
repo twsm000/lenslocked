@@ -11,13 +11,13 @@ var (
 	ErrEmptyTokenNotAllowed = errors.New("empty token not allowed")
 )
 
+const (
+	MinBytesPerSessionToken int = 32
+)
+
 type SessionToken struct {
 	hash  string
 	value string
-}
-
-func (st *SessionToken) UpdateDefault() error {
-	return st.Update(32)
 }
 
 func (st *SessionToken) Update(size int) error {
