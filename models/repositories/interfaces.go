@@ -10,3 +10,8 @@ type User interface {
 	//  - repositories.ErrUserNotFound
 	FindByEmail(email entities.Email) (*entities.User, error)
 }
+
+type Session interface {
+	Create(userID uint64) (*entities.Session, error)
+	FindUserByToken(token entities.SessionToken) (*entities.User, error)
+}

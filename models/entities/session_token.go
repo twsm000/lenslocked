@@ -1,16 +1,19 @@
 package entities
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/twsm000/lenslocked/pkg/http/session"
 )
 
+var (
+	ErrEmptyTokenNotAllowed = errors.New("empty token not allowed")
+)
+
 type SessionToken struct {
-	Hash string
-	// Value is only available when Update or UpdateDefault is called.
-	// Normally this occurs when create a new session or updating an existing one.
-	Value string
+	hash  string
+	value string
 }
 
 func (st *SessionToken) UpdateDefault() error {
@@ -22,9 +25,26 @@ func (st *SessionToken) Update(size int) error {
 	if err != nil {
 		return err
 	}
-	st.Hash = "" // TODO: hash
-	st.Value = token
+
+	return st.Set(token)
+}
+
+func (st *SessionToken) Set(token string) error {
+	if token == "" {
+		return ErrEmptyTokenNotAllowed
+	}
+
+	st.value = token
+	st.hash = token // TODO: hash the st.value
 	return nil
+}
+
+func (st SessionToken) Value() string {
+	return st.value
+}
+
+func (st SessionToken) Hash() string {
+	return st.hash
 }
 
 func (st *SessionToken) String() string {
@@ -32,9 +52,9 @@ func (st *SessionToken) String() string {
 }
 
 func (st *SessionToken) Scan(value any) error {
+	st.value = ""
 	if value == nil {
-		st.Value = ""
-		st.Hash = ""
+		st.hash = ""
 		return nil
 	}
 
@@ -42,7 +62,6 @@ func (st *SessionToken) Scan(value any) error {
 	if !ok {
 		return fmt.Errorf("invalid scan type: %T", value)
 	}
-	st.Hash = hash
-	st.Value = ""
+	st.hash = hash
 	return nil
 }

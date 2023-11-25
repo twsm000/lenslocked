@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/twsm000/lenslocked/models/entities"
+	"github.com/twsm000/lenslocked/models/httpll"
 	"github.com/twsm000/lenslocked/models/repositories"
 	"github.com/twsm000/lenslocked/models/services"
 )
@@ -21,6 +22,10 @@ type User struct {
 	UserService interface {
 		Create(input entities.UserCreatable) (*entities.User, error)
 		Authenticate(input entities.UserAuthenticable) (*entities.User, error)
+	}
+	SessionService interface {
+		Create(userID uint64) (*entities.Session, error)
+		FindUserByToken(token entities.SessionToken) (*entities.User, error)
 	}
 }
 
@@ -55,17 +60,27 @@ func (uc User) Create(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, entities.ErrInvalidUser) ||
 			errors.Is(err, entities.ErrFailedToHashPassword) ||
 			errors.Is(err, repositories.ErrFailedToCreateUser):
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			httpll.SendStatusInternalServerError(w, r)
 
 		default:
 			err = errors.Join(ErrUntracked, err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			httpll.SendStatusInternalServerError(w, r)
 		}
 		uc.LogError.Println(err)
 		return
 	}
 
-	fmt.Fprintf(w, "user created: %+v\n", user)
+	uc.LogInfo.Println("User created:", user)
+	session, err := uc.SessionService.Create(user.ID)
+	if err != nil {
+		// TODO: validate other error types
+		uc.LogError.Println(err)
+		http.Redirect(w, r, "/signin", http.StatusFound)
+		return
+	}
+
+	uc.LogInfo.Println("Session created:", session)
+	uc.setCookieSessionAndRedirect(w, r, session)
 }
 
 func (uc User) Authenticate(w http.ResponseWriter, r *http.Request) {
@@ -76,26 +91,65 @@ func (uc User) Authenticate(w http.ResponseWriter, r *http.Request) {
 	user, err := uc.UserService.Authenticate(authCredentials)
 	if err != nil {
 		switch {
-		case errors.Is(err, entities.ErrInvalidUserPassword):
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-
-		case errors.Is(err, services.ErrInvalidAuthCredentials):
-			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		case errors.Is(err, entities.ErrInvalidUserPassword),
+			errors.Is(err, services.ErrInvalidAuthCredentials):
+			url := fmt.Sprintf("/signin?email=%s", authCredentials.Email)
+			http.Redirect(w, r, url, http.StatusFound)
 
 		default:
 			err = errors.Join(ErrUntracked, err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			httpll.SendStatusInternalServerError(w, r)
 		}
+
 		uc.LogError.Println(err)
 		return
 	}
 
+	uc.LogInfo.Println("User authenticated:", user)
+	session, err := uc.SessionService.Create(user.ID)
+	if err != nil {
+		uc.LogError.Println(err)
+		httpll.Redirect500Page(w, r)
+		return
+	}
+
+	uc.LogInfo.Println("Session created:", session)
+	uc.setCookieSessionAndRedirect(w, r, session)
+}
+
+func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session")
+	if err != nil {
+		uc.LogError.Println(err)
+		http.Redirect(w, r, "/signup", http.StatusFound)
+		return
+	}
+
+	var token entities.SessionToken
+	token.Set(cookie.Value)
+	user, err := uc.SessionService.FindUserByToken(token)
+	if err != nil {
+		uc.LogError.Println(err)
+		http.Redirect(w, r, "/signup", http.StatusFound)
+		return
+	}
+
+	fmt.Fprintf(w, "User: %+v\n", user)
+	fmt.Fprintf(w, "Cookie: %+v\n", cookie)
+	fmt.Fprintf(w, "Header: %+v\n", r.Header)
+}
+
+func (uc *User) setCookieSessionAndRedirect(
+	w http.ResponseWriter,
+	r *http.Request,
+	session *entities.Session) {
+
 	cookie := http.Cookie{
-		Name:     "email",
-		Value:    user.Email.String(),
+		Name:     "session",
+		Value:    session.Token.Value(),
 		Path:     "/",
 		HttpOnly: true,
 	}
 	http.SetCookie(w, &cookie)
-	fmt.Fprintf(w, "%+v", user)
+	http.Redirect(w, r, "/users/me", http.StatusFound)
 }

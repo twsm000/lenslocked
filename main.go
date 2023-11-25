@@ -29,8 +29,8 @@ import (
 )
 
 var (
-	logInfo  *log.Logger = log.New(os.Stdout, "INFO: ", log.LstdFlags)
-	logError *log.Logger = log.New(os.Stderr, "ERROR: ", log.LstdFlags)
+	logInfo  *log.Logger = log.New(os.Stdout, "INFO: ", log.LstdFlags|log.Llongfile)
+	logError *log.Logger = log.New(os.Stderr, "ERROR: ", log.LstdFlags|log.Llongfile)
 )
 
 func main() {
@@ -86,6 +86,9 @@ func NewRouter(db *sql.DB, csrfAuthKey []byte, secureCookie bool) http.Handler {
 		UserService: services.User{
 			Repository: MustGet(postgresrepo.NewUserRepository(db)),
 		},
+		SessionService: services.Session{
+			Repository: MustGet(postgresrepo.NewSessionRepository(db)),
+		},
 	}
 	userController.Templates.SignUpPage = signupTemplate
 	userController.Templates.SignInPage = signinTemplate
@@ -119,6 +122,7 @@ func NewRouter(db *sql.DB, csrfAuthKey []byte, secureCookie bool) http.Handler {
 
 	router.Route("/users", func(r chi.Router) {
 		r.Post("/", userController.Create)
+		r.Get("/me", userController.UserInfo)
 	})
 
 	csrfMiddleware := csrf.Protect(

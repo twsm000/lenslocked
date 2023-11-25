@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/csrf"
+	"github.com/twsm000/lenslocked/models/httpll"
 )
 
 var (
@@ -58,15 +59,7 @@ func (t *Template) Execute(w http.ResponseWriter, r *http.Request, data any) {
 	var buf bytes.Buffer
 	if err := t.htmlTmpl.Execute(&buf, reqData); err != nil {
 		t.logError.Println("Failed to execute template:", err)
-		cookie := http.Cookie{
-			Name:     "redirect",
-			Value:    fmt.Sprintf("%d", http.StatusInternalServerError),
-			Path:     "/500",
-			HttpOnly: true,
-			MaxAge:   1,
-		}
-		http.SetCookie(w, &cookie)
-		http.Redirect(w, r, "/500", http.StatusSeeOther)
+		httpll.Redirect500Page(w, r)
 		return
 	}
 	_, err := io.Copy(w, &buf)

@@ -170,3 +170,4 @@
 - Why Do We Use 32 Bytes for Sessions?
 - Defining the Sessions Table
 - Stubbing the SessionService
+- Sessions in the UserController
