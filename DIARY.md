@@ -168,3 +168,4 @@
 - Exploring math/rand
 - Wrapping the crypto/rand Package
 - Why Do We Use 32 Bytes for Sessions?
+- Defining the Sessions Table
