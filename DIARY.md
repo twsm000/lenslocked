@@ -175,3 +175,4 @@
 - Create Session Tokens
 - Refactor the rand package
 - Hash Session Tokens
+- Inserting Sessions into the Database
