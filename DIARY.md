@@ -177,3 +177,4 @@
 - Hash Session Tokens
 - Inserting Sessions into the Database
 - Updating Existing Sessions
+- Querying Users via Session Token
