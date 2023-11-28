@@ -176,3 +176,4 @@
 - Refactor the rand package
 - Hash Session Tokens
 - Inserting Sessions into the Database
+- Updating Existing Sessions

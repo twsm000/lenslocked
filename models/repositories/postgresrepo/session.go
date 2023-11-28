@@ -12,7 +12,9 @@ const (
 	insertSessionQuery = `
 		INSERT INTO sessions (created_at, user_id, token)
 		VALUES (CURRENT_TIMESTAMP, $1, $2)
-		RETURNING id, created_at
+		ON CONFLICT (user_id)
+		DO UPDATE SET token = EXCLUDED.token, updated_at = CURRENT_TIMESTAMP
+		RETURNING id, created_at, updated_at
 	`
 	FindUserByTokenQuery = `
 		SELECT u.id,
@@ -28,7 +30,7 @@ const (
 )
 
 func NewSessionRepository(db *sql.DB) (repositories.Session, error) {
-	insertSessionStmt, err := db.Prepare(insertSessionQuery)
+	insertUpdateSessionStmt, err := db.Prepare(insertSessionQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -39,21 +41,21 @@ func NewSessionRepository(db *sql.DB) (repositories.Session, error) {
 	}
 
 	return &sessionRepository{
-		db:                  db,
-		insertSessionStmt:   insertSessionStmt,
-		findUserByTokenStmt: findUserByTokenStmt,
+		db:                      db,
+		insertUpdateSessionStmt: insertUpdateSessionStmt,
+		findUserByTokenStmt:     findUserByTokenStmt,
 	}, nil
 }
 
 type sessionRepository struct {
-	db                  *sql.DB
-	insertSessionStmt   *sql.Stmt
-	findUserByTokenStmt *sql.Stmt
+	db                      *sql.DB
+	insertUpdateSessionStmt *sql.Stmt
+	findUserByTokenStmt     *sql.Stmt
 }
 
 func (sr *sessionRepository) Create(session *entities.Session) error {
-	row := sr.insertSessionStmt.QueryRow(session.UserID, session.Token.Hash())
-	if err := row.Scan(&session.ID, &session.CreatedAt); err != nil {
+	row := sr.insertUpdateSessionStmt.QueryRow(session.UserID, session.Token.Hash())
+	if err := row.Scan(&session.ID, &session.CreatedAt, &session.UpdatedAt); err != nil {
 		return errors.Join(repositories.ErrFailedToCreateSession, err)
 	}
 
