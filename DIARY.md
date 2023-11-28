@@ -174,3 +174,4 @@
 - Cookie Helper Functions
 - Create Session Tokens
 - Refactor the rand package
+- Hash Session Tokens

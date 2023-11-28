@@ -38,7 +38,7 @@ func (ss sessionService) Create(userID uint64) (*entities.Session, error) {
 
 func (ss sessionService) FindUserByToken(token string) (*entities.User, error) {
 	var stoken entities.SessionToken
-	err := stoken.Set(token)
+	err := stoken.SetFromHex(token)
 	if err != nil {
 		return nil, err
 	}
