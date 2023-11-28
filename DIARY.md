@@ -179,3 +179,4 @@
 - Updating Existing Sessions
 - Querying Users via Session Token
 - Deleting Sessions
+- Sign Out Handler

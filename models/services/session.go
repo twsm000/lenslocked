@@ -8,6 +8,7 @@ import (
 type Session interface {
 	Create(userID uint64) (*entities.Session, error)
 	FindUserByToken(token string) (*entities.User, error)
+	DeleteByToken(token string) error
 }
 
 func NewSession(bytesPerToken int, repo repositories.Session) Session {

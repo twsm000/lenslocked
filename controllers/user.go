@@ -114,6 +114,24 @@ func (uc User) Authenticate(w http.ResponseWriter, r *http.Request) {
 	uc.createSessionCookieAndRedirect(w, r, session)
 }
 
+func (uc *User) SignOut(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie(CookieSession)
+	if err != nil {
+		http.Redirect(w, r, "/signup", http.StatusFound)
+		return
+	}
+
+	err = uc.SessionService.DeleteByToken(cookie.Value)
+	if err != nil {
+		uc.LogError.Println(err)
+		httpll.Redirect500Page(w, r)
+		return
+	}
+
+	http.SetCookie(w, deleteCookie(CookieSession))
+	http.Redirect(w, r, "/signup", http.StatusFound)
+}
+
 func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(CookieSession)
 	if err != nil {

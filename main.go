@@ -111,6 +111,7 @@ func NewRouter(
 	router.Get("/signup", AsHTML(userController.SignUpPageHandler))
 	router.Get("/signin", AsHTML(userController.SignInPageHandler))
 	router.Post("/signin", AsHTML(userController.Authenticate))
+	router.Post("/signout", AsHTML(userController.SignOut))
 	router.NotFound(AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}))
