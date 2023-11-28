@@ -14,4 +14,5 @@ type User interface {
 type Session interface {
 	Create(session *entities.Session) error
 	FindUserByToken(token entities.SessionToken) (*entities.User, error)
+	DeleteByToken(token entities.SessionToken) error
 }

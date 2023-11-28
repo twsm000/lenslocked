@@ -30,8 +30,9 @@ import (
 )
 
 var (
-	logInfo  *log.Logger = log.New(os.Stdout, "INFO: ", log.LstdFlags|log.Llongfile)
 	logError *log.Logger = log.New(os.Stderr, "ERROR: ", log.LstdFlags|log.Llongfile)
+	logInfo  *log.Logger = log.New(os.Stdout, "INFO: ", log.LstdFlags|log.Llongfile)
+	logWarn  *log.Logger = log.New(os.Stdout, "WARN: ", log.LstdFlags|log.Llongfile)
 )
 
 func main() {
@@ -96,7 +97,7 @@ func NewRouter(
 		},
 		SessionService: services.NewSession(
 			bytesPerToken,
-			MustGet(postgresrepo.NewSessionRepository(db)),
+			MustGet(postgresrepo.NewSessionRepository(db, logError, logInfo, logWarn)),
 		),
 	}
 	userController.Templates.SignUpPage = signupTemplate

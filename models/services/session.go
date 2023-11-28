@@ -44,3 +44,12 @@ func (ss sessionService) FindUserByToken(token string) (*entities.User, error) {
 	}
 	return ss.Repository.FindUserByToken(stoken)
 }
+
+func (ss sessionService) DeleteByToken(token string) error {
+	var stoken entities.SessionToken
+	err := stoken.SetFromHex(token)
+	if err != nil {
+		return err
+	}
+	return ss.Repository.DeleteByToken(stoken)
+}
