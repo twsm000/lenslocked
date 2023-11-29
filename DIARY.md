@@ -189,3 +189,4 @@
 - On Delete Cascade
 - Inner Join
 - Left, Right and Full Outer Join
+- Using Join in the SessionService
