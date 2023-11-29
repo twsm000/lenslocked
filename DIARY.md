@@ -187,3 +187,4 @@
 - SQL Relationship
 - Foreign Keys
 - On Delete Cascade
+- Inner Join
