@@ -117,7 +117,7 @@ func (uc User) Authenticate(w http.ResponseWriter, r *http.Request) {
 func (uc *User) SignOut(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(CookieSession)
 	if err != nil {
-		http.Redirect(w, r, "/signup", http.StatusFound)
+		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
 
@@ -129,7 +129,7 @@ func (uc *User) SignOut(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, deleteCookie(CookieSession))
-	http.Redirect(w, r, "/signup", http.StatusFound)
+	http.Redirect(w, r, "/signin", http.StatusFound)
 }
 
 func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {

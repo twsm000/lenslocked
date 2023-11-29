@@ -180,3 +180,4 @@
 - Querying Users via Session Token
 - Deleting Sessions
 - Sign Out Handler
+- Sign Out Link
