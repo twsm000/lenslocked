@@ -1,6 +1,10 @@
 package repositories
 
-import "github.com/twsm000/lenslocked/models/entities"
+import (
+	"io"
+
+	"github.com/twsm000/lenslocked/models/entities"
+)
 
 type User interface {
 	// Create possible errors:
@@ -9,10 +13,14 @@ type User interface {
 	// FindByEmail possible errors:
 	//  - repositories.ErrUserNotFound
 	FindByEmail(email entities.Email) (*entities.User, error)
+
+	io.Closer
 }
 
 type Session interface {
 	Create(session *entities.Session) error
 	FindUserByToken(token entities.SessionToken) (*entities.User, error)
 	DeleteByToken(token entities.SessionToken) error
+
+	io.Closer
 }

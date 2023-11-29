@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -65,9 +66,16 @@ func main() {
 		}
 	}()
 
+	router, closer := NewRouter(db, csrfAuthKeyData, *secureCookie, *sessionTokenSize)
+	defer func() {
+		logInfo.Println("Closing resources...")
+		if err := closer.Close(); err != nil {
+			logError.Println(err)
+		}
+	}()
 	server := http.Server{
 		Addr:    ":8080",
-		Handler: NewRouter(db, csrfAuthKeyData, *secureCookie, *sessionTokenSize),
+		Handler: router,
 	}
 	Run(&server)
 }
@@ -81,7 +89,7 @@ func NewRouter(
 	csrfAuthKey []byte,
 	secureCookie bool,
 	bytesPerToken int,
-) http.Handler {
+) (http.Handler, io.Closer) {
 	homeTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("home.html")...))
 	contactTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("contact.html")...))
 	faqTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("faq.html")...))
@@ -89,16 +97,15 @@ func NewRouter(
 	signinTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signin.html")...))
 	IntrnSrvErrTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("500.html")...))
 
+	userRepo := MustGet(postgresrepo.NewUserRepository(db))
+	sessionRepo := MustGet(postgresrepo.NewSessionRepository(db, logError, logInfo, logWarn))
 	userController := controllers.User{
 		LogInfo:  logInfo,
 		LogError: logError,
 		UserService: services.User{
-			Repository: MustGet(postgresrepo.NewUserRepository(db)),
+			Repository: userRepo,
 		},
-		SessionService: services.NewSession(
-			bytesPerToken,
-			MustGet(postgresrepo.NewSessionRepository(db, logError, logInfo, logWarn)),
-		),
+		SessionService: services.NewSession(bytesPerToken, sessionRepo),
 	}
 	userController.Templates.SignUpPage = signupTemplate
 	userController.Templates.SignInPage = signinTemplate
@@ -141,7 +148,13 @@ func NewRouter(
 		csrf.Secure(secureCookie),
 	)
 
-	return csrfMiddleware(router)
+	closer := func() error {
+		return errors.Join(
+			userRepo.Close(),
+			sessionRepo.Close(),
+		)
+	}
+	return csrfMiddleware(router), CloserFunc(closer)
 }
 
 func Run(server *http.Server) {
@@ -181,4 +194,10 @@ func MustGet[T any](t T, err error) T {
 
 func ExtractValue[T any](t T, err error) T {
 	return t
+}
+
+type CloserFunc func() error
+
+func (cf CloserFunc) Close() error {
+	return cf()
 }

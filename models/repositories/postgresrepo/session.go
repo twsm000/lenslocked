@@ -72,6 +72,14 @@ type sessionRepository struct {
 	deleteByTokenStmt       *sql.Stmt
 }
 
+func (sr *sessionRepository) Close() error {
+	return errors.Join(
+		sr.deleteByTokenStmt.Close(),
+		sr.findUserByTokenStmt.Close(),
+		sr.insertUpdateSessionStmt.Close(),
+	)
+}
+
 func (sr *sessionRepository) Create(session *entities.Session) error {
 	row := sr.insertUpdateSessionStmt.QueryRow(session.UserID, session.Token.Hash())
 	if err := row.Scan(&session.ID, &session.CreatedAt, &session.UpdatedAt); err != nil {

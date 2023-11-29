@@ -47,6 +47,13 @@ type userRepository struct {
 	findByEmailStmt *sql.Stmt
 }
 
+func (ur *userRepository) Close() error {
+	return errors.Join(
+		ur.findByEmailStmt.Close(),
+		ur.insertUserStmt.Close(),
+	)
+}
+
 func (ur *userRepository) Create(user *entities.User) error {
 	row := ur.insertUserStmt.QueryRow(user.Email, user.Password.AsBytes())
 	if err := row.Scan(&user.ID, &user.CreatedAt); err != nil {
