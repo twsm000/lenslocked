@@ -188,3 +188,4 @@
 - Foreign Keys
 - On Delete Cascade
 - Inner Join
+- Left, Right and Full Outer Join
