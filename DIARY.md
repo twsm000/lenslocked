@@ -181,3 +181,7 @@
 - Deleting Sessions
 - Sign Out Handler
 - Sign Out Link
+
+## Chapter 15 - Improved SQL
+
+- SQL Relationship
