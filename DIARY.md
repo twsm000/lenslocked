@@ -192,3 +192,4 @@
 - Using Join in the SessionService
 - SQL Indexes
 - Creating PostgreSQL Indexes
+- On Conflict
