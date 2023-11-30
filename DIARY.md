@@ -191,3 +191,4 @@
 - Left, Right and Full Outer Join
 - Using Join in the SessionService
 - SQL Indexes
+- Creating PostgreSQL Indexes
