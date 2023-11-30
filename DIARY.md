@@ -197,3 +197,4 @@
 ## Chapter 16 - Schema Migrations
 
 - What are Schema Migrations
+- How Migration Tools Work
