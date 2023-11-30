@@ -193,3 +193,7 @@
 - SQL Indexes
 - Creating PostgreSQL Indexes
 - On Conflict
+
+## Chapter 16 - Schema Migrations
+
+- What are Schema Migrations
