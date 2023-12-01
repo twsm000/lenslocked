@@ -32,3 +32,7 @@ tasks:
       - t
     cmds:
       - go test -v ./... -timeout 15s
+
+  goose:
+    cmds:
+     - goose -dir=models/sql/postgres/migrations postgres "host=localhost port=5432 user=lenslocked password=lenslocked dbname=lenslocked sslmode=disable" {{.CLI_ARGS}}

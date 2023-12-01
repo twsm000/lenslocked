@@ -199,3 +199,4 @@
 - What are Schema Migrations
 - How Migration Tools Work
 - Installing pressly/goose
+- Converting to Schema Migrations

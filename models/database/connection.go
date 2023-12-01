@@ -1,6 +1,8 @@
 package database
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 // NewConnection returns an *sql.DB connection open and validated (calls Ping)
 func NewConnection(config Config) (*sql.DB, error) {
