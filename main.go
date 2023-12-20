@@ -65,6 +65,7 @@ func main() {
 			logError.Println("Database close error:", err)
 		}
 	}()
+	TryTerminate(postgres.Migrate(db, "models/sql/postgres/migrations"))
 
 	router, closer := NewRouter(db, csrfAuthKeyData, *secureCookie, *sessionTokenSize)
 	defer func() {
@@ -200,4 +201,10 @@ type CloserFunc func() error
 
 func (cf CloserFunc) Close() error {
 	return cf()
+}
+
+func TryTerminate(err error) {
+	if err != nil {
+		logError.Fatalln(err)
+	}
 }

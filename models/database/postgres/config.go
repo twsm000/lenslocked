@@ -1,6 +1,11 @@
 package postgres
 
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+
+	"github.com/pressly/goose/v3"
+)
 
 type Config struct {
 	Driver   string
@@ -25,4 +30,16 @@ func (c Config) DataSourceName() string {
 		c.Database,
 		c.SSLMode,
 	)
+}
+
+func Migrate(db *sql.DB, dir string) error {
+	if err := goose.SetDialect("postgres"); err != nil {
+		return err
+	}
+
+	if err := goose.Up(db, dir); err != nil {
+		return err
+	}
+
+	return nil
 }
