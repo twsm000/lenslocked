@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"io/fs"
 
 	"github.com/pressly/goose/v3"
 )
@@ -42,4 +43,13 @@ func Migrate(db *sql.DB, dir string) error {
 	}
 
 	return nil
+}
+
+func MigrateFS(db *sql.DB, dir string, fs fs.FS) error {
+	if dir == "" {
+		dir = "."
+	}
+	goose.SetBaseFS(fs)
+	defer goose.SetBaseFS(nil) // undo the fs change
+	return Migrate(db, dir)
 }

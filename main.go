@@ -23,6 +23,7 @@ import (
 	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/repositories/postgresrepo"
 	"github.com/twsm000/lenslocked/models/services"
+	"github.com/twsm000/lenslocked/models/sql/postgres/migrations"
 	"github.com/twsm000/lenslocked/templates"
 	"github.com/twsm000/lenslocked/views"
 
@@ -65,7 +66,7 @@ func main() {
 			logError.Println("Database close error:", err)
 		}
 	}()
-	TryTerminate(postgres.Migrate(db, "models/sql/postgres/migrations"))
+	TryTerminate(postgres.MigrateFS(db, "", migrations.FS))
 
 	router, closer := NewRouter(db, csrfAuthKeyData, *secureCookie, *sessionTokenSize)
 	defer func() {

@@ -202,3 +202,4 @@
 - Converting to Schema Migrations
 - Schema Versioning Problem
 - Running Goose With Go
+- Embedding Migrations
