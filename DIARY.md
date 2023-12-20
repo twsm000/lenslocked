@@ -203,3 +203,4 @@
 - Schema Versioning Problem
 - Running Goose With Go
 - Embedding Migrations
+- Go Migrations
