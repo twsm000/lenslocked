@@ -45,12 +45,15 @@ func NewCreatableUser(input UserCreatable) (*User, error) {
 	user := User{
 		Email: input.Email,
 	}
-	if err := user.Password.GenerateFrom([]byte(input.Password)); err != nil {
+
+	if err := user.Password.GenerateFrom(input.Password.AsBytes()); err != nil {
 		return nil, err
 	}
+
 	if err := ValidateUser(&user); err != nil {
 		return nil, err
 	}
+
 	return &user, nil
 }
 

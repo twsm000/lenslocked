@@ -204,3 +204,4 @@
 - Running Goose With Go
 - Embedding Migrations
 - Go Migrations
+- Removing Old SQL Files
