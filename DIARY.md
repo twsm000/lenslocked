@@ -210,3 +210,4 @@
 
 - Using Context to Store Values
 - Improved Context Keys
+- Context Values With Types
