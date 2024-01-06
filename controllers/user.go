@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/twsm000/lenslocked/models/contextutil"
 	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/httpll"
 	"github.com/twsm000/lenslocked/models/repositories"
@@ -133,22 +134,29 @@ func (uc *User) SignOut(w http.ResponseWriter, r *http.Request) {
 }
 
 func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie(CookieSession)
-	if err != nil {
-		uc.LogError.Println(err)
+	user, ok := contextutil.GetUser(r.Context())
+	if !ok {
+		uc.LogInfo.Println("user not found in the current context")
 		http.Redirect(w, r, "/signup", http.StatusFound)
 		return
 	}
 
-	user, err := uc.SessionService.FindUserByToken(cookie.Value)
-	if err != nil {
-		uc.LogError.Println(err)
-		http.Redirect(w, r, "/signup", http.StatusFound)
-		return
-	}
+	// cookie, err := r.Cookie(CookieSession)
+	// if err != nil {
+	// 	uc.LogError.Println(err)
+	// 	http.Redirect(w, r, "/signup", http.StatusFound)
+	// 	return
+	// }
+
+	// user, err := uc.SessionService.FindUserByToken(cookie.Value)
+	// if err != nil {
+	// 	uc.LogError.Println(err)
+	// 	http.Redirect(w, r, "/signup", http.StatusFound)
+	// 	return
+	// }
 
 	fmt.Fprintf(w, "User: %+v\n", user)
-	fmt.Fprintf(w, "Cookie: %+v\n", cookie)
+	// fmt.Fprintf(w, "Cookie: %+v\n", cookie)
 	fmt.Fprintf(w, "Header: %+v\n", r.Header)
 }
 
