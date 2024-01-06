@@ -141,22 +141,7 @@ func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// cookie, err := r.Cookie(CookieSession)
-	// if err != nil {
-	// 	uc.LogError.Println(err)
-	// 	http.Redirect(w, r, "/signup", http.StatusFound)
-	// 	return
-	// }
-
-	// user, err := uc.SessionService.FindUserByToken(cookie.Value)
-	// if err != nil {
-	// 	uc.LogError.Println(err)
-	// 	http.Redirect(w, r, "/signup", http.StatusFound)
-	// 	return
-	// }
-
 	fmt.Fprintf(w, "User: %+v\n", user)
-	// fmt.Fprintf(w, "Cookie: %+v\n", cookie)
 	fmt.Fprintf(w, "Header: %+v\n", r.Header)
 }
 
@@ -168,4 +153,26 @@ func (uc *User) createSessionCookieAndRedirect(
 	cookie := createSessionCookie(session)
 	http.SetCookie(w, cookie)
 	http.Redirect(w, r, "/users/me", http.StatusFound)
+}
+
+type UserMiddleware struct {
+	SessionService services.Session
+}
+
+func (um UserMiddleware) Handler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie(CookieSession)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		user, err := um.SessionService.FindUserByToken(cookie.Value)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r.WithContext(contextutil.WithUser(r.Context(), user)))
+	})
 }

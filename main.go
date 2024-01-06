@@ -101,16 +101,18 @@ func NewRouter(
 
 	userRepo := MustGet(postgresrepo.NewUserRepository(db))
 	sessionRepo := MustGet(postgresrepo.NewSessionRepository(db, logError, logInfo, logWarn))
+	sessionService := services.NewSession(bytesPerToken, sessionRepo)
 	userController := controllers.User{
 		LogInfo:  logInfo,
 		LogError: logError,
 		UserService: services.User{
 			Repository: userRepo,
 		},
-		SessionService: services.NewSession(bytesPerToken, sessionRepo),
+		SessionService: sessionService,
 	}
 	userController.Templates.SignUpPage = signupTemplate
 	userController.Templates.SignInPage = signinTemplate
+
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
@@ -156,7 +158,12 @@ func NewRouter(
 			sessionRepo.Close(),
 		)
 	}
-	return csrfMiddleware(router), CloserFunc(closer)
+
+	userMiddleware := controllers.UserMiddleware{
+		SessionService: sessionService,
+	}
+
+	return csrfMiddleware(userMiddleware.Handler(router)), CloserFunc(closer)
 }
 
 func Run(server *http.Server) {
