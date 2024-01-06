@@ -205,3 +205,7 @@
 - Embedding Migrations
 - Go Migrations
 - Removing Old SQL Files
+
+## Chapter 17 - Current User via Context
+
+- Using Context to Store Values
