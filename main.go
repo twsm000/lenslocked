@@ -113,9 +113,21 @@ func NewRouter(
 	userController.Templates.SignUpPage = signupTemplate
 	userController.Templates.SignInPage = signinTemplate
 
+	csrfMiddleware := csrf.Protect(
+		csrfAuthKey,
+		csrf.Secure(secureCookie),
+	)
+	userMiddleware := controllers.UserMiddleware{
+		LogWarn:        logWarn,
+		SessionService: sessionService,
+	}
+
 	router := chi.NewRouter()
-	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
+	router.Use(middleware.Logger)
+	router.Use(csrfMiddleware)
+	router.Use(userMiddleware.SetUserToRequestContext)
+
 	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTemplate)))
 	router.Get("/contact", AsHTML(controllers.StaticTemplateHandler(contactTemplate)))
 	router.Get("/faq", AsHTML(controllers.FAQ(faqTemplate)))
@@ -144,13 +156,12 @@ func NewRouter(
 
 	router.Route("/users", func(r chi.Router) {
 		r.Post("/", userController.Create)
-		r.Get("/me", userController.UserInfo)
-	})
 
-	csrfMiddleware := csrf.Protect(
-		csrfAuthKey,
-		csrf.Secure(secureCookie),
-	)
+		r.Route("/me", func(r chi.Router) {
+			r.Use(userMiddleware.RequireUser)
+			r.Get("/", userController.UserInfo)
+		})
+	})
 
 	closer := func() error {
 		return errors.Join(
@@ -159,11 +170,7 @@ func NewRouter(
 		)
 	}
 
-	userMiddleware := controllers.UserMiddleware{
-		SessionService: sessionService,
-	}
-
-	return csrfMiddleware(userMiddleware.Handler(router)), CloserFunc(closer)
+	return router, CloserFunc(closer)
 }
 
 func Run(server *http.Server) {

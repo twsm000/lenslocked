@@ -214,3 +214,4 @@
 - Storing Users as Context Values
 - Reading Request Context Values
 - Set the User via Middleware
+- Requiring a User via Middleware

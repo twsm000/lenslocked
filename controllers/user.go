@@ -136,7 +136,7 @@ func (uc *User) SignOut(w http.ResponseWriter, r *http.Request) {
 func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {
 	user, ok := contextutil.GetUser(r.Context())
 	if !ok {
-		uc.LogInfo.Println("user not found in the current context")
+		uc.LogError.Println("Required user was not found in the current context.")
 		http.Redirect(w, r, "/signup", http.StatusFound)
 		return
 	}
@@ -156,10 +156,11 @@ func (uc *User) createSessionCookieAndRedirect(
 }
 
 type UserMiddleware struct {
+	LogWarn        *log.Logger
 	SessionService services.Session
 }
 
-func (um UserMiddleware) Handler(next http.Handler) http.Handler {
+func (um UserMiddleware) SetUserToRequestContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(CookieSession)
 		if err != nil {
@@ -174,5 +175,17 @@ func (um UserMiddleware) Handler(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r.WithContext(contextutil.WithUser(r.Context(), user)))
+	})
+}
+
+func (um UserMiddleware) RequireUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := contextutil.GetUser(r.Context()); !ok {
+			um.LogWarn.Println("user not found in the current request context")
+			http.Redirect(w, r, "/signin", http.StatusFound)
+			return
+		}
+
+		next.ServeHTTP(w, r)
 	})
 }
