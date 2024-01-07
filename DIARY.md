@@ -217,3 +217,7 @@
 - Requiring a User via Middleware
 - Accessing the Current User in Templates
 - Request-Scoped Values
+
+## Chapter 18 - Sending Emails to Users
+
+- Password Reset Process Overview
