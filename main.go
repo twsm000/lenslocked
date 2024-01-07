@@ -24,6 +24,7 @@ import (
 	"github.com/twsm000/lenslocked/models/repositories/postgresrepo"
 	"github.com/twsm000/lenslocked/models/services"
 	"github.com/twsm000/lenslocked/models/sql/postgres/migrations"
+	"github.com/twsm000/lenslocked/pkg/result"
 	"github.com/twsm000/lenslocked/templates"
 	"github.com/twsm000/lenslocked/views"
 
@@ -51,7 +52,7 @@ func main() {
 
 	logInfo.Println("Secure-Cookie:", *secureCookie)
 	logInfo.Println("SessionTokenSize", *sessionTokenSize)
-	db := MustGet(database.NewConnection(postgres.Config{
+	db := result.MustGet(database.NewConnection(postgres.Config{
 		Driver:   "pgx",
 		Host:     "localhost",
 		Port:     5432,
@@ -92,15 +93,15 @@ func NewRouter(
 	secureCookie bool,
 	bytesPerToken int,
 ) (http.Handler, io.Closer) {
-	homeTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("home.html")...))
-	contactTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("contact.html")...))
-	faqTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("faq.html")...))
-	signupTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signup.html")...))
-	signinTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signin.html")...))
-	IntrnSrvErrTemplate := MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("500.html")...))
+	homeTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("home.html")...))
+	contactTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("contact.html")...))
+	faqTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("faq.html")...))
+	signupTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signup.html")...))
+	signinTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signin.html")...))
+	IntrnSrvErrTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("500.html")...))
 
-	userRepo := MustGet(postgresrepo.NewUserRepository(db))
-	sessionRepo := MustGet(postgresrepo.NewSessionRepository(db, logError, logInfo, logWarn))
+	userRepo := result.MustGet(postgresrepo.NewUserRepository(db))
+	sessionRepo := result.MustGet(postgresrepo.NewSessionRepository(db, logError, logInfo, logWarn))
 	sessionService := services.NewSession(bytesPerToken, sessionRepo)
 	userController := controllers.User{
 		LogInfo:  logInfo,
@@ -141,7 +142,7 @@ func NewRouter(
 	router.Get("/500", AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("redirect")
 		if err != nil ||
-			ExtractValue(strconv.Atoi(cookie.Value)) != http.StatusInternalServerError {
+			result.ExtractValue(strconv.Atoi(cookie.Value)) != http.StatusInternalServerError {
 			if err == nil {
 				logInfo.Printf("Cookie: %+v", cookie)
 			}
@@ -199,17 +200,6 @@ func AsHTML(next http.HandlerFunc) http.HandlerFunc {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		next(w, r)
 	}
-}
-
-func MustGet[T any](t T, err error) T {
-	if err != nil {
-		panic(err)
-	}
-	return t
-}
-
-func ExtractValue[T any](t T, err error) T {
-	return t
 }
 
 type CloserFunc func() error

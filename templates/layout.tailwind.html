@@ -16,14 +16,17 @@
           <a class="text-lg font-semibold hover:text-blue-300 pr-8" href="/faq">FAQ</a>
         </div>
         <div>
+          {{if .User }}
           <form action="/signout" method="post" class="inline pr-4">
             <div class="hidden">
               {{ CSRFField .HTTPRequest }}
             </div>
             <button type="submit" class="px-4 font-semibold hover:text-blue-300">Sign out</button>
           </form>
+          {{else}}
           <a class="px-4 font-semibold hover:text-blue-300" href="signin">Sign in</a>
           <a class="px-4 py-2 font-semibold bg-indigo-700 hover:bg-blue-400 hover:text-black rounded" href="/signup">Sign up</a>
+          {{end}}
         </div>
       </nav>
     </header>

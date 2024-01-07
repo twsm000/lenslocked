@@ -12,7 +12,10 @@ import (
 	"sync"
 
 	"github.com/gorilla/csrf"
+	"github.com/twsm000/lenslocked/models/contextutil"
+	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/httpll"
+	"github.com/twsm000/lenslocked/pkg/result"
 )
 
 var (
@@ -52,9 +55,11 @@ func (t *Template) Execute(w http.ResponseWriter, r *http.Request, data any) {
 	})
 	var reqData struct {
 		HTTPRequest *http.Request
+		User        *entities.User
 		Data        any
 	}
 	reqData.Data = data
+	reqData.User = result.ExtractValue(contextutil.GetUser(r.Context()))
 	reqData.HTTPRequest = r
 	var buf bytes.Buffer
 	if err := t.htmlTmpl.Execute(&buf, reqData); err != nil {
