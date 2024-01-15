@@ -221,3 +221,4 @@
 ## Chapter 18 - Sending Emails to Users
 
 - Password Reset Process Overview
+- SMTP Services
