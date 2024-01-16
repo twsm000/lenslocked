@@ -223,3 +223,4 @@
 - Password Reset Process Overview
 - SMTP Services
 - Building Emails With SMPT
+- Sending Emails With SMPT
