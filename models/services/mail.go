@@ -26,10 +26,10 @@ type Email struct {
 }
 
 type SMTPConfig struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type EmailService struct {

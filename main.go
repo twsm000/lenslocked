@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -11,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"syscall"
 	"time"
@@ -42,7 +45,9 @@ func main() {
 	csrfAuthKey := flag.String("csrf-auth", "", "CSRF Auth Key (32 bytes - Mandatory)")
 	secureCookie := flag.Bool("secure-cookie", true, "Secure the cookie when use https (CSRF Protection)")
 	sessionTokenSize := flag.Int("session-token-size", entities.MinBytesPerSessionToken, "Size in bytes of the session tokens (Default 32 (min))")
+	envFilePath := flag.String("env-file", "", "Environment file settings")
 	flag.Parse()
+
 	csrfAuthKeyData := []byte(*csrfAuthKey)
 	if len(csrfAuthKeyData) != 32 {
 		log.Println("-csrf-auth needs to be 32 bytes")
@@ -50,8 +55,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	fpath := result.MustGet(filepath.Abs(*envFilePath))
+	logInfo.Println("EnvSettingsFilePath:", fpath)
+	envData := bytes.NewBuffer(result.MustGet(os.ReadFile(fpath)))
+	envSettings := struct {
+		SMTPConfig services.SMTPConfig `json:"smtp"`
+	}{}
+	decoder := json.NewDecoder(envData)
+	decoder.DisallowUnknownFields()
+	TryTerminate(decoder.Decode(&envSettings))
+
 	logInfo.Println("Secure-Cookie:", *secureCookie)
 	logInfo.Println("SessionTokenSize", *sessionTokenSize)
+	logInfo.Printf("EnvSettings: %+v]\n", envSettings)
+
 	db := result.MustGet(database.NewConnection(postgres.Config{
 		Driver:   "pgx",
 		Host:     "localhost",

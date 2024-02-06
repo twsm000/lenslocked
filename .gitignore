@@ -23,3 +23,4 @@ go.work
 .vscode
 /testdata
 /tmp
+env*.json
