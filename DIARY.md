@@ -226,3 +226,4 @@
 - Sending Emails With SMPT
 - Building an Email Service
 - Email Service.Send
+- Forgot Password Email

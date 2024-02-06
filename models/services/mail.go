@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/go-mail/mail/v2"
@@ -12,7 +13,8 @@ const (
 )
 
 var (
-	ErrFailedToSendEmail = errors.New("failed to send e-mail")
+	ErrFailedToSendEmail              = errors.New("failed to send e-mail")
+	ErrFailedToSendResetPasswordEmail = errors.New("failed to send reset password e-mail")
 )
 
 type Email struct {
@@ -71,4 +73,20 @@ func (es *EmailService) getEmailFromOrDefault(from string) string {
 		return de
 	}
 	return DefaultEmail
+}
+
+func (es *EmailService) ForgotPassword(to, resetURL string) error {
+	err := es.Send(Email{
+		From:      "",
+		To:        to,
+		Subject:   "Reset your password",
+		PlainText: fmt.Sprintf("To reset your password, please visit the following link: %s", resetURL),
+		HTML: fmt.Sprintf(`<p><To reset your password, please visit the following link: <a href="%s">%[1]s</a></p>`,
+			resetURL),
+	})
+	if err != nil {
+		return errors.Join(ErrFailedToSendResetPasswordEmail, err)
+	}
+
+	return nil
 }
