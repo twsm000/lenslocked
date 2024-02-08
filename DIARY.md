@@ -228,3 +228,7 @@
 - Email Service.Send
 - Forgot Password Email
 - ENV variables
+
+## Chapter 19 - Completing the Authentication System
+
+- Password Reset DB Migration
