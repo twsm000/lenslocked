@@ -44,7 +44,7 @@ var (
 func main() {
 	csrfAuthKey := flag.String("csrf-auth", "", "CSRF Auth Key (32 bytes - Mandatory)")
 	secureCookie := flag.Bool("secure-cookie", true, "Secure the cookie when use https (CSRF Protection)")
-	sessionTokenSize := flag.Int("session-token-size", entities.MinBytesPerSessionToken, "Size in bytes of the session tokens (Default 32 (min))")
+	sessionTokenSize := flag.Int("session-token-size", entities.MinBytesPerToken, "Size in bytes of the session tokens (Default 32 (min))")
 	envFilePath := flag.String("env-file", "", "Environment file settings")
 	flag.Parse()
 

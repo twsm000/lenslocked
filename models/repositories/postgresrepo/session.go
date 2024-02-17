@@ -17,7 +17,7 @@ const (
 		DO UPDATE SET token = EXCLUDED.token, updated_at = CURRENT_TIMESTAMP
 		RETURNING id, created_at, updated_at
 	`
-	findUserByTokenQuery = `
+	findUserBySessionTokenQuery = `
 		SELECT u.id,
 		       u.created_at,
 			   u.updated_at,
@@ -29,7 +29,7 @@ const (
 		WHERE s.token = $1
 	`
 
-	deleteByTokenQuery = `
+	deleteBySessionTokenQuery = `
 		DELETE FROM sessions
 		 WHERE token = $1
 	`
@@ -41,12 +41,12 @@ func NewSessionRepository(db *sql.DB, logErr, logInfo, logWarn *log.Logger) (rep
 		return nil, err
 	}
 
-	findUserByTokenStmt, err := db.Prepare(findUserByTokenQuery)
+	findUserByTokenStmt, err := db.Prepare(findUserBySessionTokenQuery)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteByTokenStmt, err := db.Prepare(deleteByTokenQuery)
+	deleteByTokenStmt, err := db.Prepare(deleteBySessionTokenQuery)
 	if err != nil {
 		return nil, err
 	}

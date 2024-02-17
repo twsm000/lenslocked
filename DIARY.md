@@ -232,3 +232,4 @@
 ## Chapter 19 - Completing the Authentication System
 
 - Password Reset DB Migration
+- Password Reset Service Stubs

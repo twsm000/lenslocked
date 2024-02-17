@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	MinBytesPerSessionToken int = 32
-	TokenHashSize           int = 64
+	MinBytesPerToken int = 32
+	TokenHashSize    int = 64
 )
 
 var (
@@ -34,7 +34,7 @@ func (st *SessionToken) Update(size int) error {
 }
 
 func (st *SessionToken) Set(token []byte) error {
-	if len(token) < MinBytesPerSessionToken {
+	if len(token) < MinBytesPerToken {
 		return ErrTokenSizeBelowMinRequired
 	}
 

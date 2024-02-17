@@ -12,8 +12,8 @@ type Session interface {
 }
 
 func NewSession(bytesPerToken int, repo repositories.Session) Session {
-	if bytesPerToken < entities.MinBytesPerSessionToken {
-		bytesPerToken = entities.MinBytesPerSessionToken
+	if bytesPerToken < entities.MinBytesPerToken {
+		bytesPerToken = entities.MinBytesPerToken
 	}
 	return sessionService{
 		BytesPerToken: bytesPerToken,
