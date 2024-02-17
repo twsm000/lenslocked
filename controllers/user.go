@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/twsm000/lenslocked/models/contextutil"
 	"github.com/twsm000/lenslocked/models/entities"
@@ -17,17 +18,21 @@ type User struct {
 	LogInfo   *log.Logger
 	LogError  *log.Logger
 	Templates struct {
-		SignUpPage Template
-		SignInPage Template
+		SignUpPage         Template
+		SignInPage         Template
+		ForgotPasswordPage Template
+		ResetPasswordPage  Template
 	}
 	UserService interface {
 		Create(input entities.UserCreatable) (*entities.User, error)
 		Authenticate(input entities.UserAuthenticable) (*entities.User, error)
 	}
-	SessionService services.Session
+	SessionService       services.Session
+	PasswordResetService services.PasswordReset
+	EmailService         services.EmailService
 }
 
-func (uc User) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
+func (uc *User) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		Email string
 	}
@@ -35,7 +40,7 @@ func (uc User) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
 	uc.Templates.SignUpPage.Execute(w, r, data)
 }
 
-func (uc User) SignInPageHandler(w http.ResponseWriter, r *http.Request) {
+func (uc *User) SignInPageHandler(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		Email string
 	}
@@ -43,7 +48,15 @@ func (uc User) SignInPageHandler(w http.ResponseWriter, r *http.Request) {
 	uc.Templates.SignInPage.Execute(w, r, data)
 }
 
-func (uc User) Create(w http.ResponseWriter, r *http.Request) {
+func (uc *User) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	uc.Templates.ForgotPasswordPage.Execute(w, r, data)
+}
+
+func (uc *User) Create(w http.ResponseWriter, r *http.Request) {
 	var userInput entities.UserCreatable
 	userInput.Email.Set(r.PostFormValue("email"))
 	userInput.Password.Set(r.PostFormValue("password"))
@@ -81,7 +94,7 @@ func (uc User) Create(w http.ResponseWriter, r *http.Request) {
 	uc.createSessionCookieAndRedirect(w, r, session)
 }
 
-func (uc User) Authenticate(w http.ResponseWriter, r *http.Request) {
+func (uc *User) Authenticate(w http.ResponseWriter, r *http.Request) {
 	var authCredentials entities.UserAuthenticable
 	authCredentials.Email.Set(r.PostFormValue("email"))
 	authCredentials.Password.Set(r.PostFormValue("password"))
@@ -131,6 +144,37 @@ func (uc *User) SignOut(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, deleteCookie(CookieSession))
 	http.Redirect(w, r, "/signin", http.StatusFound)
+}
+
+func (uc *User) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var email entities.Email
+	email.Set(r.PostFormValue("email"))
+	pr, err := uc.PasswordResetService.Create(email)
+	if err != nil {
+		// TODO: handle all the cases
+		uc.LogError.Println(err)
+		httpll.SendStatusInternalServerError(w, r)
+		return
+	}
+
+	// TODO: generate reset url from the correct domain
+	url := url.Values{
+		"token": {
+			pr.Token.Value(),
+		},
+	}
+	resetURL := fmt.Sprintf("http:localhost:8080/resetpass?%s", url.Encode())
+	err = uc.EmailService.ForgotPassword(email.String(), resetURL)
+	if err != nil {
+		// TODO: handle all the cases
+		uc.LogError.Println(err)
+		httpll.SendStatusInternalServerError(w, r)
+		return
+	}
+
+	// TODO: This code must be execute by the user after click on the link sent to the email.
+	// It's here for test purpose only.
+	uc.Templates.ResetPasswordPage.Execute(w, r, struct{ Email string }{Email: email.String()})
 }
 
 func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {

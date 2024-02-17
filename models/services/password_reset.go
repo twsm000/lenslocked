@@ -12,7 +12,7 @@ const (
 )
 
 type PasswordReset interface {
-	Create(email string) (*entities.PasswordReset, error)
+	Create(email entities.Email) (*entities.PasswordReset, error)
 	Consume(token string) (*entities.User, error)
 }
 
@@ -34,7 +34,7 @@ type PasswordResetService struct {
 	Duration time.Duration
 }
 
-func (prs PasswordResetService) Create(email string) (*entities.PasswordReset, error) {
+func (prs PasswordResetService) Create(email entities.Email) (*entities.PasswordReset, error) {
 	var user entities.User // TODO: Find user by email
 	passwordReset, err := entities.NewCreatablePasswordReset(user.ID, prs.BytesPerToken)
 	if err != nil {

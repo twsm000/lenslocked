@@ -233,3 +233,4 @@
 
 - Password Reset DB Migration
 - Password Reset Service Stubs
+- Forgot Password HTTP Handler
