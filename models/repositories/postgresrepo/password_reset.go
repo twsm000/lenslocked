@@ -38,7 +38,7 @@ const (
 )
 
 func NewPasswordResetRepository(db *sql.DB, logErr, logInfo, logWarn *log.Logger) (repositories.PasswordReset, error) {
-	insertUpdateStmt, err := db.Prepare(insertSessionQuery)
+	insertUpdateStmt, err := db.Prepare(insertPasswordResetQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -54,36 +54,36 @@ func NewPasswordResetRepository(db *sql.DB, logErr, logInfo, logWarn *log.Logger
 	}
 
 	return &passwordResetRepository{
-		db:                      db,
-		logErr:                  logErr,
-		logInfo:                 logInfo,
-		logWarn:                 logWarn,
-		insertUpdateSessionStmt: insertUpdateStmt,
-		findUserByTokenStmt:     findUserByTokenStmt,
-		deleteByTokenStmt:       deleteByTokenStmt,
+		db:                  db,
+		logErr:              logErr,
+		logInfo:             logInfo,
+		logWarn:             logWarn,
+		insertUpdateStmt:    insertUpdateStmt,
+		findUserByTokenStmt: findUserByTokenStmt,
+		deleteByTokenStmt:   deleteByTokenStmt,
 	}, nil
 }
 
 type passwordResetRepository struct {
-	db                      *sql.DB
-	logErr                  *log.Logger
-	logInfo                 *log.Logger
-	logWarn                 *log.Logger
-	insertUpdateSessionStmt *sql.Stmt
-	findUserByTokenStmt     *sql.Stmt
-	deleteByTokenStmt       *sql.Stmt
+	db                  *sql.DB
+	logErr              *log.Logger
+	logInfo             *log.Logger
+	logWarn             *log.Logger
+	insertUpdateStmt    *sql.Stmt
+	findUserByTokenStmt *sql.Stmt
+	deleteByTokenStmt   *sql.Stmt
 }
 
 func (sr *passwordResetRepository) Close() error {
 	return errors.Join(
 		sr.deleteByTokenStmt.Close(),
 		sr.findUserByTokenStmt.Close(),
-		sr.insertUpdateSessionStmt.Close(),
+		sr.insertUpdateStmt.Close(),
 	)
 }
 
 func (sr *passwordResetRepository) Create(reset *entities.PasswordReset) error {
-	row := sr.insertUpdateSessionStmt.QueryRow(reset.UserID, reset.Token.Hash(), reset.ExpiresAt)
+	row := sr.insertUpdateStmt.QueryRow(reset.UserID, reset.Token.Hash(), reset.ExpiresAt)
 	if err := row.Scan(&reset.ID, &reset.CreatedAt, &reset.UpdatedAt); err != nil {
 		return errors.Join(repositories.ErrFailedToCreatePasswordReset, err)
 	}

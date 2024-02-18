@@ -29,7 +29,7 @@ type User struct {
 	}
 	SessionService       services.Session
 	PasswordResetService services.PasswordReset
-	EmailService         services.EmailService
+	EmailService         *services.EmailService
 }
 
 func (uc *User) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -174,7 +174,8 @@ func (uc *User) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: This code must be execute by the user after click on the link sent to the email.
 	// It's here for test purpose only.
-	uc.Templates.ResetPasswordPage.Execute(w, r, struct{ Email string }{Email: email.String()})
+	// uc.Templates.ResetPasswordPage.Execute(w, r, struct{ Email string }{Email: email.String()})
+	http.Redirect(w, r, "/signin", http.StatusFound)
 }
 
 func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {

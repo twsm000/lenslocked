@@ -235,3 +235,4 @@
 - Password Reset Service Stubs
 - Forgot Password HTTP Handler
 - Asynchronous Emails
+- Forgot Password HTML Template

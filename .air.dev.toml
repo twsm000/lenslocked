@@ -2,7 +2,7 @@ root = "."
 testdata_dir = "testdata"
 
 [build]
-  args_bin = ["-secure-cookie=false", "-csrf-auth=S2mccKizpEd1XICAz6ZyFjJRH2sqWon0", "-session-token-size=64", "-env-file=env.dev.json"]
+  args_bin = ["-env-file=env.dev.json"]
   bin = "./bin/lenslocked"
   cmd = "task b"
   delay = 1000

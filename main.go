@@ -23,7 +23,6 @@ import (
 	"github.com/twsm000/lenslocked/controllers"
 	"github.com/twsm000/lenslocked/models/database"
 	"github.com/twsm000/lenslocked/models/database/postgres"
-	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/repositories/postgresrepo"
 	"github.com/twsm000/lenslocked/models/services"
 	"github.com/twsm000/lenslocked/models/sql/postgres/migrations"
@@ -41,33 +40,32 @@ var (
 	logWarn  *log.Logger = log.New(os.Stdout, "WARN: ", log.LstdFlags|log.Llongfile)
 )
 
+type EnvSettings struct {
+	CSRFAuthKey      string              `json:"csrf_auth_key"`
+	SecureCookie     bool                `json:"secure_cookie"`
+	SessionTokenSize int                 `json:"session_token_size"`
+	SMTPConfig       services.SMTPConfig `json:"smtp"`
+}
+
 func main() {
-	csrfAuthKey := flag.String("csrf-auth", "", "CSRF Auth Key (32 bytes - Mandatory)")
-	secureCookie := flag.Bool("secure-cookie", true, "Secure the cookie when use https (CSRF Protection)")
-	sessionTokenSize := flag.Int("session-token-size", entities.MinBytesPerToken, "Size in bytes of the session tokens (Default 32 (min))")
 	envFilePath := flag.String("env-file", "", "Environment file settings")
 	flag.Parse()
 
-	csrfAuthKeyData := []byte(*csrfAuthKey)
-	if len(csrfAuthKeyData) != 32 {
+	var env EnvSettings
+	fpath := result.MustGet(filepath.Abs(*envFilePath))
+	logInfo.Println("EnvSettingsFilePath:", fpath)
+	envData := bytes.NewBuffer(result.MustGet(os.ReadFile(fpath)))
+	decoder := json.NewDecoder(envData)
+	decoder.DisallowUnknownFields()
+	TryTerminate(decoder.Decode(&env))
+
+	if len(env.CSRFAuthKey) != 32 {
 		log.Println("-csrf-auth needs to be 32 bytes")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
-	fpath := result.MustGet(filepath.Abs(*envFilePath))
-	logInfo.Println("EnvSettingsFilePath:", fpath)
-	envData := bytes.NewBuffer(result.MustGet(os.ReadFile(fpath)))
-	envSettings := struct {
-		SMTPConfig services.SMTPConfig `json:"smtp"`
-	}{}
-	decoder := json.NewDecoder(envData)
-	decoder.DisallowUnknownFields()
-	TryTerminate(decoder.Decode(&envSettings))
-
-	logInfo.Println("Secure-Cookie:", *secureCookie)
-	logInfo.Println("SessionTokenSize", *sessionTokenSize)
-	logInfo.Printf("EnvSettings: %+v]\n", envSettings)
+	logInfo.Printf("EnvSettings: %s\n", result.MustGet(json.MarshalIndent(&env, "", "  ")))
 
 	db := result.MustGet(database.NewConnection(postgres.Config{
 		Driver:   "pgx",
@@ -86,7 +84,7 @@ func main() {
 	}()
 	TryTerminate(postgres.MigrateFS(db, "", migrations.FS))
 
-	router, closer := NewRouter(db, csrfAuthKeyData, *secureCookie, *sessionTokenSize)
+	router, closer := NewRouter(db, env)
 	defer func() {
 		logInfo.Println("Closing resources...")
 		if err := closer.Close(); err != nil {
@@ -104,37 +102,42 @@ func ApplyHTML(page ...string) []string {
 	return append([]string{"layout.tailwind.html", "footer.html"}, page...)
 }
 
-func NewRouter(
-	db *sql.DB,
-	csrfAuthKey []byte,
-	secureCookie bool,
-	bytesPerToken int,
-) (http.Handler, io.Closer) {
-	homeTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("home.html")...))
-	contactTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("contact.html")...))
-	faqTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("faq.html")...))
-	signupTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signup.html")...))
-	signinTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signin.html")...))
-	IntrnSrvErrTemplate := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("500.html")...))
+func NewRouter(DB *sql.DB, env EnvSettings) (http.Handler, io.Closer) {
+	homeTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("home.html")...))
+	contactTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("contact.html")...))
+	faqTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("faq.html")...))
+	signupTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signup.html")...))
+	signinTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signin.html")...))
+	forgotPasswordTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("forgot_password.html")...))
+	IntrnSrvErrTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("500.html")...))
 
-	userRepo := result.MustGet(postgresrepo.NewUserRepository(db))
-	sessionRepo := result.MustGet(postgresrepo.NewSessionRepository(db, logError, logInfo, logWarn))
-	sessionService := services.NewSession(bytesPerToken, sessionRepo)
-	userController := controllers.User{
-		LogInfo:  logInfo,
-		LogError: logError,
-		UserService: services.User{
-			Repository: userRepo,
-		},
-		SessionService: sessionService,
-	}
-	userController.Templates.SignUpPage = signupTemplate
-	userController.Templates.SignInPage = signinTemplate
-
-	csrfMiddleware := csrf.Protect(
-		csrfAuthKey,
-		csrf.Secure(secureCookie),
+	userRepo := result.MustGet(postgresrepo.NewUserRepository(DB))
+	userService := services.User{Repository: userRepo}
+	sessionRepo := result.MustGet(postgresrepo.NewSessionRepository(DB, logError, logInfo, logWarn))
+	sessionService := services.NewSession(env.SessionTokenSize, sessionRepo)
+	passwordResetRepo := result.MustGet(postgresrepo.NewPasswordResetRepository(DB, logError, logInfo, logWarn))
+	passwordResetService := services.NewPasswordReset(
+		env.SessionTokenSize,
+		services.DefaultPasswordResetDuration, // TODO: load this value from env file
+		passwordResetRepo,
+		userService,
 	)
+	emailService := services.NewEmailService(env.SMTPConfig)
+
+	userController := controllers.User{
+		LogInfo:              logInfo,
+		LogError:             logError,
+		UserService:          userService,
+		SessionService:       sessionService,
+		PasswordResetService: passwordResetService,
+		EmailService:         emailService,
+	}
+	userController.Templates.SignUpPage = signupTmpl
+	userController.Templates.SignInPage = signinTmpl
+	userController.Templates.ForgotPasswordPage = forgotPasswordTmpl
+	userController.Templates.ResetPasswordPage = nil // TODO: create reset password page...
+
+	csrfMiddleware := csrf.Protect([]byte(env.CSRFAuthKey), csrf.Secure(env.SecureCookie))
 	userMiddleware := controllers.UserMiddleware{
 		LogWarn:        logWarn,
 		SessionService: sessionService,
@@ -146,13 +149,15 @@ func NewRouter(
 	router.Use(csrfMiddleware)
 	router.Use(userMiddleware.SetUserToRequestContext)
 
-	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTemplate)))
-	router.Get("/contact", AsHTML(controllers.StaticTemplateHandler(contactTemplate)))
-	router.Get("/faq", AsHTML(controllers.FAQ(faqTemplate)))
+	router.Get("/", AsHTML(controllers.StaticTemplateHandler(homeTmpl)))
+	router.Get("/contact", AsHTML(controllers.StaticTemplateHandler(contactTmpl)))
+	router.Get("/faq", AsHTML(controllers.FAQ(faqTmpl)))
 	router.Get("/signup", AsHTML(userController.SignUpPageHandler))
 	router.Get("/signin", AsHTML(userController.SignInPageHandler))
+	router.Get("/forgotpass", AsHTML(userController.ForgotPasswordHandler))
 	router.Post("/signin", AsHTML(userController.Authenticate))
 	router.Post("/signout", AsHTML(userController.SignOut))
+	router.Post("/resetpass", AsHTML(userController.ResetPassword))
 	router.NotFound(AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}))
@@ -169,7 +174,7 @@ func NewRouter(
 		}
 
 		w.WriteHeader(http.StatusInternalServerError)
-		IntrnSrvErrTemplate.Execute(w, r, nil)
+		IntrnSrvErrTmpl.Execute(w, r, nil)
 	}))
 
 	router.Route("/users", func(r chi.Router) {
