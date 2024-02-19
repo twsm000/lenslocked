@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -13,7 +12,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strconv"
 	"syscall"
 	"time"
@@ -40,42 +38,19 @@ var (
 	logWarn  *log.Logger = log.New(os.Stdout, "WARN: ", log.LstdFlags|log.Llongfile)
 )
 
-type EnvSettings struct {
-	CSRFAuthKey      string              `json:"csrf_auth_key"`
-	SecureCookie     bool                `json:"secure_cookie"`
-	SessionTokenSize int                 `json:"session_token_size"`
-	SMTPConfig       services.SMTPConfig `json:"smtp"`
-}
-
 func main() {
 	envFilePath := flag.String("env-file", "", "Environment file settings")
 	flag.Parse()
 
-	var env EnvSettings
-	fpath := result.MustGet(filepath.Abs(*envFilePath))
-	logInfo.Println("EnvSettingsFilePath:", fpath)
-	envData := bytes.NewBuffer(result.MustGet(os.ReadFile(fpath)))
-	decoder := json.NewDecoder(envData)
-	decoder.DisallowUnknownFields()
-	TryTerminate(decoder.Decode(&env))
-
-	if len(env.CSRFAuthKey) != 32 {
-		log.Println("-csrf-auth needs to be 32 bytes")
+	env := result.MustGet(LoadEnvSettings(*envFilePath, "pgx"))
+	if len(env.CSRF.Key) != 32 {
+		log.Println("CSRF.Key needs to be 32 bytes")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-
 	logInfo.Printf("EnvSettings: %s\n", result.MustGet(json.MarshalIndent(&env, "", "  ")))
 
-	db := result.MustGet(database.NewConnection(postgres.Config{
-		Driver:   "pgx",
-		Host:     "localhost",
-		Port:     5432,
-		User:     "lenslocked",
-		Password: "lenslocked",
-		Database: "lenslocked",
-		SSLMode:  "disable",
-	}))
+	db := result.MustGet(database.NewConnection(env.DBConfig))
 	defer func() {
 		logInfo.Println("Closing database...")
 		if err := db.Close(); err != nil {
@@ -92,7 +67,7 @@ func main() {
 		}
 	}()
 	server := http.Server{
-		Addr:    ":8080",
+		Addr:    env.Server.Address,
 		Handler: router,
 	}
 	Run(&server)
@@ -102,7 +77,7 @@ func ApplyHTML(page ...string) []string {
 	return append([]string{"layout.tailwind.html", "footer.html"}, page...)
 }
 
-func NewRouter(DB *sql.DB, env EnvSettings) (http.Handler, io.Closer) {
+func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 	homeTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("home.html")...))
 	contactTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("contact.html")...))
 	faqTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("faq.html")...))
@@ -114,10 +89,10 @@ func NewRouter(DB *sql.DB, env EnvSettings) (http.Handler, io.Closer) {
 	userRepo := result.MustGet(postgresrepo.NewUserRepository(DB))
 	userService := services.User{Repository: userRepo}
 	sessionRepo := result.MustGet(postgresrepo.NewSessionRepository(DB, logError, logInfo, logWarn))
-	sessionService := services.NewSession(env.SessionTokenSize, sessionRepo)
+	sessionService := services.NewSession(env.Session.TokenSize, sessionRepo)
 	passwordResetRepo := result.MustGet(postgresrepo.NewPasswordResetRepository(DB, logError, logInfo, logWarn))
 	passwordResetService := services.NewPasswordReset(
-		env.SessionTokenSize,
+		env.Session.TokenSize,
 		services.DefaultPasswordResetDuration, // TODO: load this value from env file
 		passwordResetRepo,
 		userService,
@@ -137,7 +112,7 @@ func NewRouter(DB *sql.DB, env EnvSettings) (http.Handler, io.Closer) {
 	userController.Templates.ForgotPasswordPage = forgotPasswordTmpl
 	userController.Templates.ResetPasswordPage = nil // TODO: create reset password page...
 
-	csrfMiddleware := csrf.Protect([]byte(env.CSRFAuthKey), csrf.Secure(env.SecureCookie))
+	csrfMiddleware := csrf.Protect([]byte(env.CSRF.Key), csrf.Secure(env.CSRF.Secure))
 	userMiddleware := controllers.UserMiddleware{
 		LogWarn:        logWarn,
 		SessionService: sessionService,

@@ -5,7 +5,7 @@ tasks:
     aliases:
       - b
     cmds:
-      - go build -o ./bin/lenslocked main.go
+      - go build -o ./bin/lenslocked *.go
 
   clean:
     aliases:

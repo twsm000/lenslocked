@@ -9,13 +9,13 @@ import (
 )
 
 type Config struct {
-	Driver   string
-	Host     string
-	Port     uint16
-	User     string
-	Password string
-	Database string
-	SSLMode  string
+	Driver   string `json:"-"`
+	Host     string `json:"host"`
+	Port     uint16 `json:"port"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Database string `json:"database"`
+	SSLMode  string `json:"ssl_mode"`
 }
 
 func (c Config) DriverName() string {
