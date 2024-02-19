@@ -18,10 +18,10 @@ type User struct {
 	LogInfo   *log.Logger
 	LogError  *log.Logger
 	Templates struct {
-		SignUpPage         Template
-		SignInPage         Template
-		ForgotPasswordPage Template
-		ResetPasswordPage  Template
+		SignUpPage            Template
+		SignInPage            Template
+		ForgotPasswordPage    Template
+		CheckPasswordSentPage Template
 	}
 	UserService interface {
 		Create(input entities.UserCreatable) (*entities.User, error)
@@ -172,10 +172,7 @@ func (uc *User) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: This code must be execute by the user after click on the link sent to the email.
-	// It's here for test purpose only.
-	// uc.Templates.ResetPasswordPage.Execute(w, r, struct{ Email string }{Email: email.String()})
-	http.Redirect(w, r, "/signin", http.StatusFound)
+	uc.Templates.CheckPasswordSentPage.Execute(w, r, struct{ Email string }{Email: email.String()})
 }
 
 func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {

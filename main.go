@@ -83,7 +83,10 @@ func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 	faqTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("faq.html")...))
 	signupTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signup.html")...))
 	signinTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signin.html")...))
-	forgotPasswordTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("forgot_password.html")...))
+	forgotPasswordTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS,
+		ApplyHTML("forgot_password.html")...))
+	checkPasswordSentTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS,
+		ApplyHTML("check_password_sent.html")...))
 	IntrnSrvErrTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("500.html")...))
 
 	userRepo := result.MustGet(postgresrepo.NewUserRepository(DB))
@@ -110,7 +113,7 @@ func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 	userController.Templates.SignUpPage = signupTmpl
 	userController.Templates.SignInPage = signinTmpl
 	userController.Templates.ForgotPasswordPage = forgotPasswordTmpl
-	userController.Templates.ResetPasswordPage = nil // TODO: create reset password page...
+	userController.Templates.CheckPasswordSentPage = checkPasswordSentTmpl
 
 	csrfMiddleware := csrf.Protect([]byte(env.CSRF.Key), csrf.Secure(env.CSRF.Secure))
 	userMiddleware := controllers.UserMiddleware{
