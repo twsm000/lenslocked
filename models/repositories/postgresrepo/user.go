@@ -9,12 +9,13 @@ import (
 )
 
 const (
-	insertUser = `
+	insertUserQuery = `
 		INSERT INTO users (created_at, email, password)
 		VALUES (CURRENT_TIMESTAMP, $1, $2)
 		RETURNING id, created_at
 	`
-	findByEmail = `
+
+	findUserByEmailQuery = `
 		SELECT id,
                created_at,
 			   updated_at,
@@ -23,34 +24,50 @@ const (
 		  FROM users
 		 where email = $1
 	`
+
+	updateUserPasswordQuery = `
+		UPDATE users
+		   SET password = $2
+		 WHERE id = $1
+	`
 )
 
 func NewUserRepository(db *sql.DB) (repositories.User, error) {
-	insertUserStmt, err := db.Prepare(insertUser)
+	insertUserStmt, err := db.Prepare(insertUserQuery)
 	if err != nil {
 		return nil, err
 	}
-	findByEmailStmt, err := db.Prepare(findByEmail)
+
+	findUserByEmailStmt, err := db.Prepare(findUserByEmailQuery)
 	if err != nil {
 		return nil, err
 	}
+
+	updateUserPasswordStmt, err := db.Prepare(updateUserPasswordQuery)
+	if err != nil {
+		return nil, err
+	}
+
 	return &userRepository{
-		db:              db,
-		insertUserStmt:  insertUserStmt,
-		findByEmailStmt: findByEmailStmt,
+		db:                     db,
+		insertUserStmt:         insertUserStmt,
+		findUserByEmailStmt:    findUserByEmailStmt,
+		updateUserPasswordStmt: updateUserPasswordStmt,
 	}, nil
 }
 
 type userRepository struct {
-	db              *sql.DB
-	insertUserStmt  *sql.Stmt
-	findByEmailStmt *sql.Stmt
+	db                     *sql.DB
+	insertUserStmt         *sql.Stmt
+	findUserByEmailStmt    *sql.Stmt
+	updateUserPasswordStmt *sql.Stmt
 }
 
 func (ur *userRepository) Close() error {
 	return errors.Join(
-		ur.findByEmailStmt.Close(),
+		ur.findUserByEmailStmt.Close(),
 		ur.insertUserStmt.Close(),
+		ur.updateUserPasswordStmt.Close(),
 	)
 }
 
@@ -64,7 +81,7 @@ func (ur *userRepository) Create(user *entities.User) error {
 }
 
 func (ur *userRepository) FindByEmail(email entities.Email) (*entities.User, error) {
-	row := ur.findByEmailStmt.QueryRow(email)
+	row := ur.findUserByEmailStmt.QueryRow(email)
 	var user entities.User
 	err := row.Scan(
 		&user.ID,
@@ -77,4 +94,11 @@ func (ur *userRepository) FindByEmail(email entities.Email) (*entities.User, err
 		return nil, errors.Join(repositories.ErrUserNotFound, err)
 	}
 	return &user, nil
+}
+
+func (ur *userRepository) UpdatePassword(user *entities.User) error {
+	if _, err := ur.updateUserPasswordStmt.Exec(user.ID, user.Password); err != nil {
+		return errors.Join(repositories.ErrFailedToUpdateUserPassword, err)
+	}
+	return nil
 }

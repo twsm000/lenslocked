@@ -13,6 +13,9 @@ type User interface {
 	// FindByEmail possible errors:
 	//  - repositories.ErrUserNotFound
 	FindByEmail(email entities.Email) (*entities.User, error)
+	// UpdatePassword possible errors:
+	//  - repositories.ErrFailedToUpdateUserPassword
+	UpdatePassword(user *entities.User) error
 
 	io.Closer
 }

@@ -18,29 +18,29 @@ type PasswordReset interface {
 }
 
 func NewPasswordReset(bytesPerToken int, duration time.Duration, repo repositories.PasswordReset,
-	userService User) PasswordReset {
+	userRepo repositories.User) PasswordReset {
 	if bytesPerToken < entities.MinBytesPerToken {
 		bytesPerToken = entities.MinBytesPerToken
 	}
 
 	return PasswordResetService{
-		BytesPerToken: bytesPerToken,
-		Repository:    repo,
-		Duration:      duration,
-		UserService:   userService,
+		BytesPerToken:  bytesPerToken,
+		Repository:     repo,
+		Duration:       duration,
+		UserRepository: userRepo,
 	}
 }
 
 type PasswordResetService struct {
 	BytesPerToken int
-	Repository    repositories.PasswordReset
 	// Duration is the amount of time that a PasswordReset is valid for
-	Duration    time.Duration
-	UserService User
+	Duration       time.Duration
+	Repository     repositories.PasswordReset
+	UserRepository repositories.User
 }
 
 func (prs PasswordResetService) Create(email entities.Email) (*entities.PasswordReset, error) {
-	user, err := prs.UserService.Repository.FindByEmail(email)
+	user, err := prs.UserRepository.FindByEmail(email)
 	if err != nil {
 		return nil, err
 	}

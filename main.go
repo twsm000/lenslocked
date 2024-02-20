@@ -90,7 +90,7 @@ func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 	IntrnSrvErrTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("500.html")...))
 
 	userRepo := result.MustGet(postgresrepo.NewUserRepository(DB))
-	userService := services.User{Repository: userRepo}
+	userService := services.NewUser(userRepo)
 	sessionRepo := result.MustGet(postgresrepo.NewSessionRepository(DB, logError, logInfo, logWarn))
 	sessionService := services.NewSession(env.Session.TokenSize, sessionRepo)
 	passwordResetRepo := result.MustGet(postgresrepo.NewPasswordResetRepository(DB, logError, logInfo, logWarn))
@@ -98,7 +98,7 @@ func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 		env.Session.TokenSize,
 		services.DefaultPasswordResetDuration, // TODO: load this value from env file
 		passwordResetRepo,
-		userService,
+		userRepo,
 	)
 	emailService := services.NewEmailService(env.SMTPConfig)
 
@@ -114,6 +114,7 @@ func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 	userController.Templates.SignInPage = signinTmpl
 	userController.Templates.ForgotPasswordPage = forgotPasswordTmpl
 	userController.Templates.CheckPasswordSentPage = checkPasswordSentTmpl
+	userController.Templates.ResetPasswordPage = nil // TODO: implement page
 
 	csrfMiddleware := csrf.Protect([]byte(env.CSRF.Key), csrf.Secure(env.CSRF.Secure))
 	userMiddleware := controllers.UserMiddleware{
@@ -132,10 +133,12 @@ func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 	router.Get("/faq", AsHTML(controllers.FAQ(faqTmpl)))
 	router.Get("/signup", AsHTML(userController.SignUpPageHandler))
 	router.Get("/signin", AsHTML(userController.SignInPageHandler))
-	router.Get("/forgotpass", AsHTML(userController.ForgotPasswordHandler))
+	router.Get("/forgotpass", AsHTML(userController.ForgotPasswordPageHandler))
+	router.Get("/resetpass", AsHTML(userController.ResetPasswordPageHandler))
 	router.Post("/signin", AsHTML(userController.Authenticate))
 	router.Post("/signout", AsHTML(userController.SignOut))
 	router.Post("/resetpass", AsHTML(userController.ResetPassword))
+	router.Post("/updatepass", AsHTML(userController.UpdatePassword))
 	router.NotFound(AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}))

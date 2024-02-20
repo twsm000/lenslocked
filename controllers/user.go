@@ -22,11 +22,9 @@ type User struct {
 		SignInPage            Template
 		ForgotPasswordPage    Template
 		CheckPasswordSentPage Template
+		ResetPasswordPage     Template
 	}
-	UserService interface {
-		Create(input entities.UserCreatable) (*entities.User, error)
-		Authenticate(input entities.UserAuthenticable) (*entities.User, error)
-	}
+	UserService          services.User
 	SessionService       services.Session
 	PasswordResetService services.PasswordReset
 	EmailService         *services.EmailService
@@ -48,12 +46,20 @@ func (uc *User) SignInPageHandler(w http.ResponseWriter, r *http.Request) {
 	uc.Templates.SignInPage.Execute(w, r, data)
 }
 
-func (uc *User) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+func (uc *User) ForgotPasswordPageHandler(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		Email string
 	}
 	data.Email = r.FormValue("email")
 	uc.Templates.ForgotPasswordPage.Execute(w, r, data)
+}
+
+func (uc *User) ResetPasswordPageHandler(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Token string
+	}
+	data.Token = r.FormValue("token")
+	uc.Templates.ResetPasswordPage.Execute(w, r, data)
 }
 
 func (uc *User) Create(w http.ResponseWriter, r *http.Request) {
@@ -173,6 +179,37 @@ func (uc *User) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uc.Templates.CheckPasswordSentPage.Execute(w, r, struct{ Email string }{Email: email.String()})
+}
+
+func (uc *User) UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	user, err := uc.PasswordResetService.Consume(r.PostFormValue("token"))
+	if err != nil {
+		// TODO: handle all the cases
+		uc.LogError.Println(err)
+		httpll.SendStatusInternalServerError(w, r)
+		return
+	}
+
+	var rawPassword entities.RawPassword
+	rawPassword.Set(r.PostFormValue("password"))
+	if err := uc.UserService.UpdatePassword(user, rawPassword); err != nil {
+		// TODO: handle all the cases
+		uc.LogError.Println(err)
+		httpll.SendStatusInternalServerError(w, r)
+		return
+	}
+
+	uc.LogInfo.Println("User password updated:", user)
+	session, err := uc.SessionService.Create(user.ID)
+	if err != nil {
+		// TODO: validate other error types
+		uc.LogError.Println(err)
+		http.Redirect(w, r, "/signin", http.StatusFound)
+		return
+	}
+
+	uc.LogInfo.Println("Session created:", session)
+	uc.createSessionCookieAndRedirect(w, r, session)
 }
 
 func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {

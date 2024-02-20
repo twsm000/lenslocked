@@ -46,7 +46,7 @@ func NewCreatableUser(input UserCreatable) (*User, error) {
 		Email: input.Email,
 	}
 
-	if err := user.Password.GenerateFrom(input.Password.AsBytes()); err != nil {
+	if err := user.Password.GenerateFrom(input.Password); err != nil {
 		return nil, err
 	}
 

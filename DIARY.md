@@ -238,3 +238,4 @@
 - Forgot Password HTML Template
 - Initializing Services With ENV Vars
 - Check Your Email Template
+- Reset Password HTTP Handlers

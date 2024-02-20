@@ -4,6 +4,7 @@ import "errors"
 
 var (
 	ErrFailedToCreateUser          = errors.New("failed to create user")
+	ErrFailedToUpdateUserPassword  = errors.New("failed to update user password")
 	ErrFailedToCreateSession       = errors.New("failed to create session")
 	ErrFailedToDeleteSession       = errors.New("failed to delete session")
 	ErrFailedToCreatePasswordReset = errors.New("failed to create password reset")
