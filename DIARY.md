@@ -239,3 +239,4 @@
 - Initializing Services With ENV Vars
 - Check Your Email Template
 - Reset Password HTTP Handlers
+- Reset Password HTML Template
