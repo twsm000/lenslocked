@@ -8,10 +8,6 @@ import (
 	"github.com/twsm000/lenslocked/models/repositories"
 )
 
-const (
-	DefaultPasswordResetDuration = 1 * time.Hour
-)
-
 type PasswordReset interface {
 	Create(email entities.Email) (*entities.PasswordReset, error)
 	Consume(token string) (*entities.User, error)
@@ -45,7 +41,11 @@ func (prs PasswordResetService) Create(email entities.Email) (*entities.Password
 		return nil, err
 	}
 
-	passwordReset, err := entities.NewCreatablePasswordReset(user.ID, prs.BytesPerToken)
+	passwordReset, err := entities.NewCreatablePasswordReset(
+		user.ID,
+		prs.BytesPerToken,
+		entities.NewPasswordResetTimeout(time.Now(), prs.Duration),
+	)
 	if err != nil {
 		return nil, err
 	}

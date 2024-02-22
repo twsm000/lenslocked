@@ -21,6 +21,7 @@ import (
 	"github.com/twsm000/lenslocked/controllers"
 	"github.com/twsm000/lenslocked/models/database"
 	"github.com/twsm000/lenslocked/models/database/postgres"
+	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/repositories/postgresrepo"
 	"github.com/twsm000/lenslocked/models/services"
 	"github.com/twsm000/lenslocked/models/sql/postgres/migrations"
@@ -98,7 +99,7 @@ func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 	passwordResetRepo := result.MustGet(postgresrepo.NewPasswordResetRepository(DB, logError, logInfo, logWarn))
 	passwordResetService := services.NewPasswordReset(
 		env.Session.TokenSize,
-		services.DefaultPasswordResetDuration, // TODO: load this value from env file
+		entities.DefaultPasswordResetDuration, // TODO: load this value from env file
 		passwordResetRepo,
 		userRepo,
 	)

@@ -25,10 +25,10 @@ const (
                u.updated_at,
                u.email,
                u.password
-          FROM password_resets r
+          FROM password_resets pr
 		 INNER JOIN users u
-		    ON u.id = r.user_id
-		WHERE r.token = $1
+		    ON u.id = pr.user_id
+		WHERE pr.token = $1
 	`
 
 	deleteByPasswordResetTokenQuery = `

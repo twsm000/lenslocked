@@ -2,6 +2,10 @@ package entities
 
 import "time"
 
+const (
+	DefaultPasswordResetDuration = 1 * time.Hour
+)
+
 type PasswordReset struct {
 	ID        uint64
 	CreatedAt time.Time
@@ -11,15 +15,25 @@ type PasswordReset struct {
 	ExpiresAt time.Time
 }
 
-func NewCreatablePasswordReset(userID uint64, bytesPerToken int) (*PasswordReset, error) {
+func NewCreatablePasswordReset(userID uint64, bytesPerToken int, timeout time.Time) (*PasswordReset, error) {
 	var token SessionToken
 	err := token.Update(bytesPerToken)
 	if err != nil {
 		return nil, err
 	}
+
 	pr := PasswordReset{
-		UserID: userID,
-		Token:  token,
+		UserID:    userID,
+		Token:     token,
+		ExpiresAt: timeout,
 	}
 	return &pr, nil
+}
+
+func NewPasswordResetTimeout(start time.Time, duration time.Duration) time.Time {
+	if duration == 0 {
+		duration = DefaultPasswordResetDuration
+	}
+
+	return start.Add(duration)
 }

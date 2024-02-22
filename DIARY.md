@@ -241,3 +241,4 @@
 - Reset Password HTTP Handlers
 - Reset Password HTML Template
 - Update Password Function
+- Password Reset Creation
