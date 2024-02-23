@@ -243,3 +243,7 @@
 - Update Password Function
 - Password Reset Creation
 - Implementing Consume
+
+## Chapter 20 - Better Error Handling
+
+- Inspecting Errors
