@@ -97,7 +97,7 @@ func (ur *userRepository) FindByEmail(email entities.Email) (*entities.User, err
 }
 
 func (ur *userRepository) UpdatePassword(user *entities.User) error {
-	if _, err := ur.updateUserPasswordStmt.Exec(user.ID, user.Password); err != nil {
+	if _, err := ur.updateUserPasswordStmt.Exec(user.ID, user.Password.AsBytes()); err != nil {
 		return errors.Join(repositories.ErrFailedToUpdateUserPassword, err)
 	}
 	return nil

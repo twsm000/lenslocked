@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	insertPasswordResetQuery = `
+	queryInsertPasswordReset = `
 		INSERT INTO password_resets (created_at, user_id, token, expires_at)
 		VALUES (CURRENT_TIMESTAMP, $1, $2, $3)
 		ON CONFLICT (user_id)
@@ -19,8 +19,14 @@ const (
 					 ,expires_at = EXCLUDED.expires_at
 		RETURNING id, created_at, updated_at
 	`
-	findUserByPasswordResetTokenQuery = `
-		SELECT u.id,
+	queryFindPasswordResetAndUserByToken = `
+		SELECT pr.id,
+               pr.created_at,
+               pr.updated_at,
+               pr.user_id,
+               pr.token,
+               pr.expires_at,
+               u.id,
                u.created_at,
                u.updated_at,
                u.email,
@@ -31,53 +37,53 @@ const (
 		WHERE pr.token = $1
 	`
 
-	deleteByPasswordResetTokenQuery = `
+	QueryDeletePasswordResetByID = `
 		DELETE FROM password_resets
-		 WHERE token = $1
+		 WHERE id = $1
 	`
 )
 
 func NewPasswordResetRepository(db *sql.DB, logErr, logInfo, logWarn *log.Logger) (repositories.PasswordReset, error) {
-	insertUpdateStmt, err := db.Prepare(insertPasswordResetQuery)
+	insertUpdateStmt, err := db.Prepare(queryInsertPasswordReset)
 	if err != nil {
 		return nil, err
 	}
 
-	findUserByTokenStmt, err := db.Prepare(findUserByPasswordResetTokenQuery)
+	findUserByTokenStmt, err := db.Prepare(queryFindPasswordResetAndUserByToken)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteByTokenStmt, err := db.Prepare(deleteByPasswordResetTokenQuery)
+	deleteByTokenStmt, err := db.Prepare(QueryDeletePasswordResetByID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &passwordResetRepository{
-		db:                  db,
-		logErr:              logErr,
-		logInfo:             logInfo,
-		logWarn:             logWarn,
-		insertUpdateStmt:    insertUpdateStmt,
-		findUserByTokenStmt: findUserByTokenStmt,
-		deleteByTokenStmt:   deleteByTokenStmt,
+		db:                             db,
+		logErr:                         logErr,
+		logInfo:                        logInfo,
+		logWarn:                        logWarn,
+		insertUpdateStmt:               insertUpdateStmt,
+		findPasswordAndUserByTokenStmt: findUserByTokenStmt,
+		deleteByTokenStmt:              deleteByTokenStmt,
 	}, nil
 }
 
 type passwordResetRepository struct {
-	db                  *sql.DB
-	logErr              *log.Logger
-	logInfo             *log.Logger
-	logWarn             *log.Logger
-	insertUpdateStmt    *sql.Stmt
-	findUserByTokenStmt *sql.Stmt
-	deleteByTokenStmt   *sql.Stmt
+	db                             *sql.DB
+	logErr                         *log.Logger
+	logInfo                        *log.Logger
+	logWarn                        *log.Logger
+	insertUpdateStmt               *sql.Stmt
+	findPasswordAndUserByTokenStmt *sql.Stmt
+	deleteByTokenStmt              *sql.Stmt
 }
 
 func (sr *passwordResetRepository) Close() error {
 	return errors.Join(
 		sr.deleteByTokenStmt.Close(),
-		sr.findUserByTokenStmt.Close(),
+		sr.findPasswordAndUserByTokenStmt.Close(),
 		sr.insertUpdateStmt.Close(),
 	)
 }
@@ -91,10 +97,19 @@ func (sr *passwordResetRepository) Create(reset *entities.PasswordReset) error {
 	return nil
 }
 
-func (sr *passwordResetRepository) FindUserByToken(token entities.SessionToken) (*entities.User, error) {
-	row := sr.findUserByTokenStmt.QueryRow(token.Hash())
+func (sr *passwordResetRepository) FindPasswordResetAndUserByToken(
+	token entities.SessionToken) (*entities.PasswordReset, *entities.User, error) {
+	/*******************************************************************************/
+	row := sr.findPasswordAndUserByTokenStmt.QueryRow(token.Hash())
+	var passwordReset entities.PasswordReset
 	var user entities.User
 	err := row.Scan(
+		&passwordReset.ID,
+		&passwordReset.CreatedAt,
+		&passwordReset.UpdatedAt,
+		&passwordReset.UserID,
+		&passwordReset.Token,
+		&passwordReset.ExpiresAt,
 		&user.ID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -102,13 +117,13 @@ func (sr *passwordResetRepository) FindUserByToken(token entities.SessionToken) 
 		&user.Password,
 	)
 	if err != nil {
-		return nil, errors.Join(repositories.ErrUserNotFound, err)
+		return nil, nil, errors.Join(repositories.ErrUserNotFound, err)
 	}
-	return &user, nil
+	return &passwordReset, &user, nil
 }
 
-func (sr *passwordResetRepository) DeleteByToken(token entities.SessionToken) error {
-	result, err := sr.deleteByTokenStmt.Exec(token.Hash())
+func (sr *passwordResetRepository) DeleteByID(id uint64) error {
+	result, err := sr.deleteByTokenStmt.Exec(id)
 	if err != nil {
 		return errors.Join(repositories.ErrFailedToDeletePasswordReset, err)
 	}
@@ -119,11 +134,11 @@ func (sr *passwordResetRepository) DeleteByToken(token entities.SessionToken) er
 
 	switch rowsAffected {
 	case 0:
-		sr.logWarn.Println("Try to delete password reset, but not found:", token.Value())
+		sr.logWarn.Println("Try to delete password reset, but not found:", id)
 	case 1:
-		sr.logInfo.Println("PasswordReset deleted successfully:", token.Value())
+		sr.logInfo.Println("PasswordReset deleted successfully:", id)
 	default:
-		sr.logErr.Printf("Failed to delete password reset: %q, rows affected: %d", token.Value(), rowsAffected)
+		sr.logErr.Printf("Failed to delete password reset: %d, rows affected: %d", id, rowsAffected)
 	}
 	return nil
 }

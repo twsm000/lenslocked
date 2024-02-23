@@ -242,3 +242,4 @@
 - Reset Password HTML Template
 - Update Password Function
 - Password Reset Creation
+- Implementing Consume

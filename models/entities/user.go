@@ -6,10 +6,11 @@ import (
 )
 
 var (
+	ErrFailedToHashPassword = errors.New("failed to hash password")
+	ErrInvalidTokenSize     = errors.New("invalid token size")
 	ErrInvalidUser          = errors.New("invalid user")
 	ErrInvalidUserEmail     = errors.New("invalid user email")
 	ErrInvalidUserPassword  = errors.New("invalid user password")
-	ErrFailedToHashPassword = errors.New("failed to hash password")
 )
 
 type User struct {

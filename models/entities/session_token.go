@@ -66,14 +66,18 @@ func (st *SessionToken) String() string {
 func (st *SessionToken) Scan(value any) error {
 	st.value = ""
 	if value == nil {
-		st.hash = [TokenHashSize]byte{}
 		return nil
 	}
 
-	hash, ok := value.([TokenHashSize]byte)
+	hash, ok := value.([]byte)
 	if !ok {
 		return fmt.Errorf("invalid scan type: %T", value)
 	}
-	st.hash = hash
+
+	if len(hash) != TokenHashSize {
+		return ErrInvalidUser
+	}
+
+	copy(st.hash[:], hash)
 	return nil
 }

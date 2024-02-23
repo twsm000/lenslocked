@@ -102,6 +102,7 @@ func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 		entities.DefaultPasswordResetDuration, // TODO: load this value from env file
 		passwordResetRepo,
 		userRepo,
+		logError,
 	)
 	emailService := services.NewEmailService(env.SMTPConfig)
 

@@ -182,7 +182,9 @@ func (uc *User) ResetPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func (uc *User) UpdatePassword(w http.ResponseWriter, r *http.Request) {
-	user, err := uc.PasswordResetService.Consume(r.PostFormValue("token"))
+	var stoken entities.SessionToken
+	stoken.SetFromHex(r.PostFormValue("token"))
+	user, err := uc.PasswordResetService.Consume(stoken)
 	if err != nil {
 		// TODO: handle all the cases
 		uc.LogError.Println(err)

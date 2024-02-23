@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
     updated_at TIMESTAMP,
     user_id BIGINT UNIQUE NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     token BYTEA UNIQUE NOT NULL CHECK(octet_length(token) = 64),
-    expires_at TIMESTAMP NOT NULL
+    expires_at TIMESTAMPTZ NOT NULL
 );
 -- +goose StatementEnd
 
