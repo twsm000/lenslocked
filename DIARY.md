@@ -247,3 +247,4 @@
 ## Chapter 20 - Better Error Handling
 
 - Inspecting Errors
+- Inspecting Wrapped Errors
