@@ -28,6 +28,13 @@ func ParseFSTemplate(logError *log.Logger, fs fs.FS, pattern ...string) (*Templa
 		"CSRFField": func(req *http.Request) (template.HTML, error) {
 			return "", ErrNotImplemented
 		},
+		"errors": func() []string {
+			return []string{
+				"Don't do that!",
+				"The email address you provided is already associated with an account.",
+				"Something went wrong.",
+			}
+		},
 	})
 	tmpl, err := tmpl.ParseFS(fs, pattern...)
 	if err != nil {
