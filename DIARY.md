@@ -248,3 +248,4 @@
 
 - Inspecting Errors
 - Inspecting Wrapped Errors
+- Designing The Alert Banner

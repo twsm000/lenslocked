@@ -30,6 +30,19 @@
         </div>
       </nav>
     </header>
+    <!-- ALERTS -->
+    <div class="py-4 px-2">
+      <div class="flex bg-red-100 rounded px-2 py-2 text-red-800 mb-2">
+        <div class="flex-grow">
+          The Email address you provided is already associated with an account.
+        </div>
+        <a href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </a>
+      </div>
+    </div>
     {{template "inner-body-page" .}}
     <footer class="mt-auto">
       {{template "footer" .}}
