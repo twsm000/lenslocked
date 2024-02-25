@@ -250,3 +250,4 @@
 - Inspecting Wrapped Errors
 - Designing The Alert Banner
 - Dynamic Alerts
+- Removing Alerts with Javascript
