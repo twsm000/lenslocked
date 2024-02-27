@@ -1,16 +1,7 @@
 package entities
 
 import (
-	"errors"
 	"time"
-)
-
-var (
-	ErrFailedToHashPassword = errors.New("failed to hash password")
-	ErrInvalidTokenSize     = errors.New("invalid token size")
-	ErrInvalidUser          = errors.New("invalid user")
-	ErrInvalidUserEmail     = errors.New("invalid user email")
-	ErrInvalidUserPassword  = errors.New("invalid user password")
 )
 
 type User struct {
@@ -21,17 +12,21 @@ type User struct {
 	Password  Hash
 }
 
-func ValidateUser(u *User) error {
+// ValidateUser possible errors:
+//   - ErrInvalidUser
+//   - ErrInvalidUserEmail
+//   - ErrInvalidUserPassword
+func ValidateUser(u *User) Error {
 	if u == nil {
-		return ErrInvalidUser
+		return NewError(ErrInvalidUser)
 	}
 
 	if u.Email.IsEmpty() {
-		return ErrInvalidUserEmail
+		return NewClientError("Email cannot be empty", ErrInvalidUserEmail)
 	}
 
 	if len(u.Password) == 0 {
-		return ErrInvalidUserPassword
+		return NewClientError("Password cannot be empty", ErrInvalidUserPassword)
 	}
 
 	return nil
@@ -42,7 +37,12 @@ type UserCreatable struct {
 	Password RawPassword
 }
 
-func NewCreatableUser(input UserCreatable) (*User, error) {
+// NewCreatableUser possible errors:
+//   - ErrFailedToHashPassword
+//   - ErrInvalidUser
+//   - ErrInvalidUserEmail
+//   - ErrInvalidUserPassword
+func NewCreatableUser(input UserCreatable) (*User, Error) {
 	user := User{
 		Email: input.Email,
 	}

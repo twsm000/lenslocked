@@ -10,7 +10,6 @@ import (
 	"github.com/twsm000/lenslocked/models/contextutil"
 	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/httpll"
-	"github.com/twsm000/lenslocked/models/repositories"
 	"github.com/twsm000/lenslocked/models/services"
 )
 
@@ -69,30 +68,25 @@ func (uc *User) Create(w http.ResponseWriter, r *http.Request) {
 
 	user, err := uc.UserService.Create(userInput)
 	if err != nil {
-		switch {
-		case errors.Is(err, entities.ErrInvalidUserEmail) ||
-			errors.Is(err, entities.ErrInvalidUserPassword):
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-
-		case errors.Is(err, entities.ErrInvalidUser) ||
-			errors.Is(err, entities.ErrFailedToHashPassword) ||
-			errors.Is(err, repositories.ErrFailedToCreateUser):
-			httpll.SendStatusInternalServerError(w, r)
-
-		default:
-			err = errors.Join(ErrUntracked, err)
+		uc.LogError.Println(err)
+		if err.IsClientErr() {
+			http.Error(w, err.ClientErr(), http.StatusBadRequest)
+		} else {
 			httpll.SendStatusInternalServerError(w, r)
 		}
-		uc.LogError.Println(err)
 		return
 	}
 
 	uc.LogInfo.Println("User created:", user)
 	session, err := uc.SessionService.Create(user.ID)
 	if err != nil {
-		// TODO: validate other error types
 		uc.LogError.Println(err)
-		http.Redirect(w, r, "/signin", http.StatusFound)
+		if err.IsClientErr() {
+			// TODO: how to sent the err.ClientErr() error through a Redirect
+			http.Redirect(w, r, "/signin", http.StatusFound)
+		} else {
+			httpll.SendStatusInternalServerError(w, r)
+		}
 		return
 	}
 

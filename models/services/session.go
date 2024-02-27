@@ -6,7 +6,12 @@ import (
 )
 
 type Session interface {
-	Create(userID uint64) (*entities.Session, error)
+	// Create possible errors:
+	//   - rand.ErrFailedToGenerateSlice
+	//   - rand.ErrInvalidSizeUnexpected
+	//   - ErrTokenSizeBelowMinRequired
+	//   - repositories.ErrFailedToCreateSession {ErrFixedTokenSizeRequired, ErrUserNotFound}
+	Create(userID uint64) (*entities.Session, entities.Error)
 	FindUserByToken(token string) (*entities.User, error)
 	DeleteByToken(token string) error
 }
@@ -26,7 +31,12 @@ type sessionService struct {
 	Repository    repositories.Session
 }
 
-func (ss sessionService) Create(userID uint64) (*entities.Session, error) {
+// Create possible errors:
+//   - rand.ErrFailedToGenerateSlice
+//   - rand.ErrInvalidSizeUnexpected
+//   - ErrTokenSizeBelowMinRequired
+//   - repositories.ErrFailedToCreateSession {ErrFixedTokenSizeRequired, ErrUserNotFound}
+func (ss sessionService) Create(userID uint64) (*entities.Session, entities.Error) {
 	session, err := entities.NewCreatableSession(userID, ss.BytesPerToken)
 	if err != nil {
 		return nil, err

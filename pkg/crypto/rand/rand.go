@@ -11,6 +11,9 @@ var (
 	ErrInvalidSizeUnexpected = errors.New("invalid size unexpected")
 )
 
+// Bytes possible errors:
+//   - ErrFailedToGenerateSlice
+//   - ErrInvalidSizeUnexpected
 func Bytes(size int) ([]byte, error) {
 	b := make([]byte, size)
 	n, err := rand.Read(b)
@@ -23,6 +26,9 @@ func Bytes(size int) ([]byte, error) {
 	return b, nil
 }
 
+// String possible errors:
+//   - ErrFailedToGenerateSlice
+//   - ErrInvalidSizeUnexpected
 func String(byteSize int) (string, error) {
 	data, err := Bytes(byteSize)
 	if err != nil {

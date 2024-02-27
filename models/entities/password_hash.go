@@ -42,10 +42,10 @@ func (h Hash) Compare(rawPassword RawPassword) error {
 
 // GenerateFrom possible errors:
 //   - ErrFailedToHashPassword
-func (h *Hash) GenerateFrom(rawPassword RawPassword) error {
+func (h *Hash) GenerateFrom(rawPassword RawPassword) Error {
 	passwordHashed, err := bcrypt.GenerateFromPassword(rawPassword.AsBytes(), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.Join(ErrFailedToHashPassword, err)
+		return NewError(ErrFailedToHashPassword, err)
 	}
 	*h = passwordHashed
 	return nil

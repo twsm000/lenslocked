@@ -3,6 +3,7 @@ package postgresrepo
 import (
 	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/repositories"
@@ -71,10 +72,20 @@ func (ur *userRepository) Close() error {
 	)
 }
 
-func (ur *userRepository) Create(user *entities.User) error {
+// Create possible errors:
+//   - ErrFailedToCreateUser {ErrDuplicateUserEmailNotAllowed}
+func (ur *userRepository) Create(user *entities.User) entities.Error {
 	row := ur.insertUserStmt.QueryRow(user.Email, user.Password.AsBytes())
 	if err := row.Scan(&user.ID, &user.CreatedAt); err != nil {
-		return errors.Join(repositories.ErrFailedToCreateUser, err)
+		if strings.Contains(err.Error(), "users_email_key") {
+			return entities.NewClientError(
+				"This email is already used by an user",
+				repositories.ErrFailedToCreateUser,
+				repositories.ErrDuplicateUserEmailNotAllowed,
+				err,
+			)
+		}
+		return entities.NewError(repositories.ErrFailedToCreateUser, err)
 	}
 
 	return nil

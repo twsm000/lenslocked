@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/repositories"
@@ -80,10 +81,26 @@ func (sr *sessionRepository) Close() error {
 	)
 }
 
-func (sr *sessionRepository) Create(session *entities.Session) error {
+// Create possible errors:
+//   - ErrFailedToCreateSession {ErrFixedTokenSizeRequired, ErrUserNotFound}
+func (sr *sessionRepository) Create(session *entities.Session) entities.Error {
 	row := sr.insertUpdateSessionStmt.QueryRow(session.UserID, session.Token.Hash())
 	if err := row.Scan(&session.ID, &session.CreatedAt, &session.UpdatedAt); err != nil {
-		return errors.Join(repositories.ErrFailedToCreateSession, err)
+		if strings.Contains(err.Error(), "sessions_token_check") {
+			return entities.NewError(
+				repositories.ErrFailedToCreateSession,
+				repositories.ErrFixedTokenSizeRequired,
+				err,
+			)
+		} else if strings.Contains(err.Error(), "sessions_user_id_fkey") {
+			return entities.NewClientError(
+				"User not found",
+				repositories.ErrFailedToCreateSession,
+				repositories.ErrUserNotFound,
+				err,
+			)
+		}
+		return entities.NewError(repositories.ErrFailedToCreateSession, err)
 	}
 
 	return nil

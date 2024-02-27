@@ -8,20 +8,22 @@ import (
 
 type User interface {
 	// Create possible errors:
-	//  - repositories.ErrFailedToCreateUser
-	Create(user *entities.User) error
+	//  - ErrFailedToCreateUser {ErrDuplicateUserEmailNotAllowed}
+	Create(user *entities.User) entities.Error
 	// FindByEmail possible errors:
-	//  - repositories.ErrUserNotFound
+	//  - ErrUserNotFound
 	FindByEmail(email entities.Email) (*entities.User, error)
 	// UpdatePassword possible errors:
-	//  - repositories.ErrFailedToUpdateUserPassword
+	//  - ErrFailedToUpdateUserPassword
 	UpdatePassword(user *entities.User) error
 
 	io.Closer
 }
 
 type Session interface {
-	Create(session *entities.Session) error
+	// Create possible errors:
+	//   - ErrFailedToCreateSession {ErrFixedTokenSizeRequired, ErrUserNotFound}
+	Create(session *entities.Session) entities.Error
 	FindUserByToken(token entities.SessionToken) (*entities.User, error)
 	DeleteByToken(token entities.SessionToken) error
 

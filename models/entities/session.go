@@ -12,7 +12,11 @@ type Session struct {
 	Token     SessionToken
 }
 
-func NewCreatableSession(userID uint64, bytesPerToken int) (*Session, error) {
+// NewCreatableSession possible errors:
+//   - rand.ErrFailedToGenerateSlice
+//   - rand.ErrInvalidSizeUnexpected
+//   - ErrTokenSizeBelowMinRequired
+func NewCreatableSession(userID uint64, bytesPerToken int) (*Session, Error) {
 	var token SessionToken
 	err := token.Update(bytesPerToken)
 	if err != nil {

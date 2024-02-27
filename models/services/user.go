@@ -8,7 +8,13 @@ import (
 )
 
 type User interface {
-	Create(input entities.UserCreatable) (*entities.User, error)
+	// Create possible errors:
+	//   - entities.ErrFailedToHashPassword
+	//   - entities.ErrInvalidUser
+	//   - entities.ErrInvalidUserEmail
+	//   - entities.ErrInvalidUserPassword
+	//   - repositories.ErrFailedToCreateUser
+	Create(input entities.UserCreatable) (*entities.User, entities.Error)
 	Authenticate(input entities.UserAuthenticable) (*entities.User, error)
 	UpdatePassword(user *entities.User, rawPassword entities.RawPassword) error
 }
@@ -23,7 +29,13 @@ type userService struct {
 	Repository repositories.User
 }
 
-func (us *userService) Create(input entities.UserCreatable) (*entities.User, error) {
+// Create possible errors:
+//   - entities.ErrFailedToHashPassword
+//   - entities.ErrInvalidUser
+//   - entities.ErrInvalidUserEmail
+//   - entities.ErrInvalidUserPassword
+//   - repositories.ErrFailedToCreateUser
+func (us *userService) Create(input entities.UserCreatable) (*entities.User, entities.Error) {
 	user, err := entities.NewCreatableUser(input)
 	if err != nil {
 		return nil, err

@@ -24,18 +24,24 @@ type SessionToken struct {
 	value string
 }
 
-func (st *SessionToken) Update(size int) error {
+// Update possible errors:
+//   - rand.ErrFailedToGenerateSlice
+//   - rand.ErrInvalidSizeUnexpected
+//   - ErrTokenSizeBelowMinRequired
+func (st *SessionToken) Update(size int) Error {
 	token, err := rand.Bytes(size)
 	if err != nil {
-		return err
+		return NewError(err)
 	}
 
 	return st.Set(token)
 }
 
-func (st *SessionToken) Set(token []byte) error {
+// Set possible errors:
+//   - ErrTokenSizeBelowMinRequired
+func (st *SessionToken) Set(token []byte) Error {
 	if len(token) < MinBytesPerToken {
-		return ErrTokenSizeBelowMinRequired
+		return NewError(ErrTokenSizeBelowMinRequired)
 	}
 
 	st.value = hex.EncodeToString(token)
@@ -43,10 +49,13 @@ func (st *SessionToken) Set(token []byte) error {
 	return nil
 }
 
-func (st *SessionToken) SetFromHex(hexToken string) error {
+// SetFromHex possible errors:
+//   - ErrFailedToDecodeToken
+//   - ErrTokenSizeBelowMinRequired
+func (st *SessionToken) SetFromHex(hexToken string) Error {
 	token, err := hex.DecodeString(hexToken)
 	if err != nil {
-		return errors.Join(ErrFailedToDecodeToken, err)
+		return NewError(ErrFailedToDecodeToken, err)
 	}
 	return st.Set(token)
 }
