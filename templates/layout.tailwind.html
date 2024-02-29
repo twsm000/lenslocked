@@ -31,9 +31,9 @@
       </nav>
     </header>
     <!-- ALERTS -->
-    {{if errors}}
+    {{if .Errors}}
     <div class="py-4 px-2">
-      {{range errors}}
+      {{range .Errors}}
       <div class="closeable flex bg-red-100 rounded px-2 py-2 text-red-800 mb-2">
         <div class="flex-grow">
           {{.}}

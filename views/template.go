@@ -22,37 +22,30 @@ var (
 	ErrNotImplemented = errors.New("not implemented")
 )
 
-func ParseFSTemplate(logError *log.Logger, fs fs.FS, pattern ...string) (*Template, error) {
+func ParseFSTemplate[T any](logError *log.Logger, fs fs.FS, pattern ...string) (*Template[T], error) {
 	tmpl := template.New(pattern[0])
 	tmpl = tmpl.Funcs(template.FuncMap{
 		"CSRFField": func(req *http.Request) (template.HTML, error) {
 			return "", ErrNotImplemented
-		},
-		"errors": func() []string {
-			return []string{
-				"Don't do that!",
-				"The email address you provided is already associated with an account.",
-				"Something went wrong.",
-			}
 		},
 	})
 	tmpl, err := tmpl.ParseFS(fs, pattern...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse fs template: %w", err)
 	}
-	return &Template{
+	return &Template[T]{
 		logError: logError,
 		htmlTmpl: tmpl,
 	}, nil
 }
 
-type Template struct {
+type Template[T any] struct {
 	syncOnceFuncs sync.Once
 	htmlTmpl      *template.Template
 	logError      *log.Logger
 }
 
-func (t *Template) Execute(w http.ResponseWriter, r *http.Request, data any) {
+func (t *Template[T]) Execute(w http.ResponseWriter, r *http.Request, data T, errors ...entities.ClientError) {
 	t.syncOnceFuncs.Do(func() {
 		t.htmlTmpl = t.htmlTmpl.Funcs(template.FuncMap{
 			"CSRFField": func(req *http.Request) template.HTML {
@@ -63,17 +56,25 @@ func (t *Template) Execute(w http.ResponseWriter, r *http.Request, data any) {
 	var reqData struct {
 		HTTPRequest *http.Request
 		User        *entities.User
-		Data        any
+		Data        T
+		Errors      []string
 	}
 	reqData.Data = data
 	reqData.User = result.ExtractValue(contextutil.GetUser(r.Context()))
 	reqData.HTTPRequest = r
+	if len(errors) > 0 {
+		reqData.Errors = make([]string, 0, len(errors))
+		for _, err := range errors {
+			reqData.Errors = append(reqData.Errors, err.ClientErr())
+		}
+	}
 	var buf bytes.Buffer
 	if err := t.htmlTmpl.Execute(&buf, reqData); err != nil {
 		t.logError.Println("Failed to execute template:", err)
 		httpll.Redirect500Page(w, r)
 		return
 	}
+
 	_, err := io.Copy(w, &buf)
 	if err != nil {
 		t.logError.Println("Failed to send data to ResponseWriter:", err)

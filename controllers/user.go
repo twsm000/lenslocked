@@ -13,15 +13,19 @@ import (
 	"github.com/twsm000/lenslocked/models/services"
 )
 
+type SignUpPageData struct {
+	Email string
+}
+
 type User struct {
 	LogInfo   *log.Logger
 	LogError  *log.Logger
 	Templates struct {
-		SignUpPage            Template
-		SignInPage            Template
-		ForgotPasswordPage    Template
-		CheckPasswordSentPage Template
-		ResetPasswordPage     Template
+		SignUpPage            Template[SignUpPageData]
+		SignInPage            Template[any]
+		ForgotPasswordPage    Template[any]
+		CheckPasswordSentPage Template[any]
+		ResetPasswordPage     Template[any]
 	}
 	UserService          services.User
 	SessionService       services.Session
@@ -30,11 +34,7 @@ type User struct {
 }
 
 func (uc *User) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
-	var data struct {
-		Email string
-	}
-	data.Email = r.FormValue("email")
-	uc.Templates.SignUpPage.Execute(w, r, data)
+	uc.Templates.SignUpPage.Execute(w, r, SignUpPageData{r.FormValue("email")})
 }
 
 func (uc *User) SignInPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +70,7 @@ func (uc *User) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		uc.LogError.Println(err)
 		if err.IsClientErr() {
-			http.Error(w, err.ClientErr(), http.StatusBadRequest)
+			uc.Templates.SignUpPage.Execute(w, r, SignUpPageData{userInput.Email.String()}, err)
 		} else {
 			httpll.SendStatusInternalServerError(w, r)
 		}

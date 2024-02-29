@@ -61,3 +61,7 @@ func (e *entityError) Is(target error) bool {
 func (e *entityError) As(target any) bool {
 	return errors.As(e.err, target)
 }
+
+type ClientError interface {
+	ClientErr() string
+}

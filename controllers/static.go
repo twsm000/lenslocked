@@ -5,13 +5,13 @@ import (
 	"net/http"
 )
 
-func StaticTemplateHandler(tmpl Template) http.HandlerFunc {
+func StaticTemplateHandler(tmpl Template[any]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(w, r, nil)
 	}
 }
 
-func FAQ(tmpl Template) http.HandlerFunc {
+func FAQ(tmpl Template[any]) http.HandlerFunc {
 	questions := []struct {
 		Question string
 		Answer   template.HTML

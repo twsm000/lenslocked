@@ -79,18 +79,24 @@ func ApplyHTML(page ...string) []string {
 }
 
 func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
-	homeTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("home.html")...))
-	contactTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("contact.html")...))
-	faqTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("faq.html")...))
-	signupTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signup.html")...))
-	signinTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("signin.html")...))
-	forgotPasswordTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS,
-		ApplyHTML("forgot_password.html")...))
-	checkPasswordSentTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS,
-		ApplyHTML("check_password_sent.html")...))
-	resetPasswordTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS,
-		ApplyHTML("reset_password.html")...))
-	IntrnSrvErrTmpl := result.MustGet(views.ParseFSTemplate(logError, templates.FS, ApplyHTML("500.html")...))
+	homeTmpl := result.MustGet(views.ParseFSTemplate[any](
+		logError, templates.FS, ApplyHTML("home.html")...))
+	contactTmpl := result.MustGet(views.ParseFSTemplate[any](
+		logError, templates.FS, ApplyHTML("contact.html")...))
+	faqTmpl := result.MustGet(views.ParseFSTemplate[any](
+		logError, templates.FS, ApplyHTML("faq.html")...))
+	signupTmpl := result.MustGet(views.ParseFSTemplate[controllers.SignUpPageData](
+		logError, templates.FS, ApplyHTML("signup.html")...))
+	signinTmpl := result.MustGet(views.ParseFSTemplate[any](
+		logError, templates.FS, ApplyHTML("signin.html")...))
+	forgotPasswordTmpl := result.MustGet(views.ParseFSTemplate[any](
+		logError, templates.FS, ApplyHTML("forgot_password.html")...))
+	checkPasswordSentTmpl := result.MustGet(views.ParseFSTemplate[any](
+		logError, templates.FS, ApplyHTML("check_password_sent.html")...))
+	resetPasswordTmpl := result.MustGet(views.ParseFSTemplate[any](
+		logError, templates.FS, ApplyHTML("reset_password.html")...))
+	IntrnSrvErrTmpl := result.MustGet(views.ParseFSTemplate[any](
+		logError, templates.FS, ApplyHTML("500.html")...))
 
 	userRepo := result.MustGet(postgresrepo.NewUserRepository(DB))
 	userService := services.NewUser(userRepo)
