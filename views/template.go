@@ -9,7 +9,6 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
-	"sync"
 
 	"github.com/gorilla/csrf"
 	"github.com/twsm000/lenslocked/models/contextutil"
@@ -24,11 +23,6 @@ var (
 
 func ParseFSTemplate[T any](logError *log.Logger, fs fs.FS, pattern ...string) (*Template[T], error) {
 	tmpl := template.New(pattern[0])
-	tmpl = tmpl.Funcs(template.FuncMap{
-		"CSRFField": func(req *http.Request) (template.HTML, error) {
-			return "", ErrNotImplemented
-		},
-	})
 	tmpl, err := tmpl.ParseFS(fs, pattern...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse fs template: %w", err)
@@ -39,37 +33,27 @@ func ParseFSTemplate[T any](logError *log.Logger, fs fs.FS, pattern ...string) (
 	}, nil
 }
 
+type templateData[T any] struct {
+	CSRFField template.HTML
+	User      *entities.User
+	Data      T
+	Errors    []string
+}
 type Template[T any] struct {
-	syncOnceFuncs sync.Once
-	htmlTmpl      *template.Template
-	logError      *log.Logger
+	htmlTmpl *template.Template
+	logError *log.Logger
 }
 
 func (t *Template[T]) Execute(w http.ResponseWriter, r *http.Request, data T, errors ...entities.ClientError) {
-	t.syncOnceFuncs.Do(func() {
-		t.htmlTmpl = t.htmlTmpl.Funcs(template.FuncMap{
-			"CSRFField": func(req *http.Request) template.HTML {
-				return csrf.TemplateField(req)
-			},
-		})
-	})
-	var reqData struct {
-		HTTPRequest *http.Request
-		User        *entities.User
-		Data        T
-		Errors      []string
+	tmplData := templateData[T]{
+		CSRFField: csrf.TemplateField(r),
+		Data:      data,
+		User:      result.ExtractValue(contextutil.GetUser(r.Context())),
+		Errors:    toStringSlice(errors),
 	}
-	reqData.Data = data
-	reqData.User = result.ExtractValue(contextutil.GetUser(r.Context()))
-	reqData.HTTPRequest = r
-	if len(errors) > 0 {
-		reqData.Errors = make([]string, 0, len(errors))
-		for _, err := range errors {
-			reqData.Errors = append(reqData.Errors, err.ClientErr())
-		}
-	}
+
 	var buf bytes.Buffer
-	if err := t.htmlTmpl.Execute(&buf, reqData); err != nil {
+	if err := t.htmlTmpl.Execute(&buf, tmplData); err != nil {
 		t.logError.Println("Failed to execute template:", err)
 		httpll.Redirect500Page(w, r)
 		return
@@ -79,4 +63,15 @@ func (t *Template[T]) Execute(w http.ResponseWriter, r *http.Request, data T, er
 	if err != nil {
 		t.logError.Println("Failed to send data to ResponseWriter:", err)
 	}
+}
+
+func toStringSlice(errors []entities.ClientError) []string {
+	var result []string
+	if len(errors) > 0 {
+		result = make([]string, 0, len(errors))
+		for _, err := range errors {
+			result = append(result, err.ClientErr())
+		}
+	}
+	return result
 }

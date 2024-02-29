@@ -19,7 +19,7 @@
           {{if .User }}
           <form action="/signout" method="post" class="inline pr-4">
             <div class="hidden">
-              {{ CSRFField .HTTPRequest }}
+              {{ .CSRFField }}
             </div>
             <button type="submit" class="px-4 font-semibold hover:text-blue-300">Sign out</button>
           </form>
