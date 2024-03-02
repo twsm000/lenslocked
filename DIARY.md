@@ -255,3 +255,4 @@
 - Accepting Errors In Templates
 - Public vs Internal Errors
 - Creating Public Errors
+- Using Public Errors
