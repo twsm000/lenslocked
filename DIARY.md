@@ -253,3 +253,4 @@
 - Removing Alerts with Javascript
 - Detecting Existing Emails
 - Accepting Errors In Templates
+- Public vs Internal Errors
