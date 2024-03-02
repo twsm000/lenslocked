@@ -254,3 +254,4 @@
 - Detecting Existing Emails
 - Accepting Errors In Templates
 - Public vs Internal Errors
+- Creating Public Errors
