@@ -154,8 +154,7 @@ func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 	}))
 	router.Get("/500", AsHTML(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("redirect")
-		if err != nil ||
-			result.ExtractValue(strconv.Atoi(cookie.Value)) != http.StatusInternalServerError {
+		if err != nil || result.ExtractValue(strconv.Atoi(cookie.Value)) != http.StatusInternalServerError {
 			if err == nil {
 				logInfo.Printf("Cookie: %+v", cookie)
 			}

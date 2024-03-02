@@ -10,6 +10,7 @@ import (
 	"github.com/twsm000/lenslocked/models/contextutil"
 	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/httpll"
+	"github.com/twsm000/lenslocked/models/repositories"
 	"github.com/twsm000/lenslocked/models/services"
 )
 
@@ -65,28 +66,31 @@ func (uc *User) Create(w http.ResponseWriter, r *http.Request) {
 	var userInput entities.UserCreatable
 	userInput.Email.Set(r.PostFormValue("email"))
 	userInput.Password.Set(r.PostFormValue("password"))
+	signUpPageData := SignUpPageData{userInput.Email.String()}
 
 	user, err := uc.UserService.Create(userInput)
 	if err != nil {
 		uc.LogError.Println(err)
-		if err.IsClientErr() {
-			uc.Templates.SignUpPage.Execute(w, r, SignUpPageData{userInput.Email.String()}, err)
-		} else {
-			httpll.SendStatusInternalServerError(w, r)
+		if !err.IsClientErr() {
+			err = entities.NewClientError("Sorry, something went wrong when creating your user account", err)
 		}
+		uc.Templates.SignUpPage.Execute(w, r, signUpPageData, err)
 		return
 	}
 
 	uc.LogInfo.Println("User created:", user)
 	session, err := uc.SessionService.Create(user.ID)
 	if err != nil {
-		uc.LogError.Println(err)
 		if err.IsClientErr() {
-			// TODO: how to sent the err.ClientErr() error through a Redirect
-			http.Redirect(w, r, "/signin", http.StatusFound)
-		} else {
-			httpll.SendStatusInternalServerError(w, r)
+			if err.Is(repositories.ErrUserNotFound) {
+				err = entities.NewClientError("Something went wrong while creating your user, please try again!", err)
+			}
+			uc.Templates.SignUpPage.Execute(w, r, signUpPageData, err)
+			return
 		}
+
+		uc.LogError.Println(err)
+		httpll.Redirect500Page(w, r)
 		return
 	}
 
@@ -220,11 +224,7 @@ func (uc *User) UserInfo(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Header: %+v\n", r.Header)
 }
 
-func (uc *User) createSessionCookieAndRedirect(
-	w http.ResponseWriter,
-	r *http.Request,
-	session *entities.Session,
-) {
+func (uc *User) createSessionCookieAndRedirect(w http.ResponseWriter, r *http.Request, session *entities.Session) {
 	cookie := createSessionCookie(session)
 	http.SetCookie(w, cookie)
 	http.Redirect(w, r, "/users/me", http.StatusFound)
