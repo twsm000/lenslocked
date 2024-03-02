@@ -87,7 +87,7 @@ func NewRouter(DB *sql.DB, env *EnvConfig) (http.Handler, io.Closer) {
 		logError, templates.FS, ApplyHTML("faq.html")...))
 	signupTmpl := result.MustGet(views.ParseFSTemplate[controllers.SignUpPageData](
 		logError, templates.FS, ApplyHTML("signup.html")...))
-	signinTmpl := result.MustGet(views.ParseFSTemplate[any](
+	signinTmpl := result.MustGet(views.ParseFSTemplate[controllers.SignInPageData](
 		logError, templates.FS, ApplyHTML("signin.html")...))
 	forgotPasswordTmpl := result.MustGet(views.ParseFSTemplate[any](
 		logError, templates.FS, ApplyHTML("forgot_password.html")...))

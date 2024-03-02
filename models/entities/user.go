@@ -15,7 +15,7 @@ type User struct {
 // ValidateUser possible errors:
 //   - ErrInvalidUser
 //   - ErrInvalidUserEmail
-//   - ErrInvalidUserPassword
+//   - ErrInvalidPassword
 func ValidateUser(u *User) Error {
 	if u == nil {
 		return NewError(ErrInvalidUser)
@@ -26,7 +26,7 @@ func ValidateUser(u *User) Error {
 	}
 
 	if len(u.Password) == 0 {
-		return NewClientError("Password cannot be empty", ErrInvalidUserPassword)
+		return NewClientError("Password cannot be empty", ErrInvalidPassword)
 	}
 
 	return nil
@@ -41,7 +41,7 @@ type UserCreatable struct {
 //   - ErrFailedToHashPassword
 //   - ErrInvalidUser
 //   - ErrInvalidUserEmail
-//   - ErrInvalidUserPassword
+//   - ErrInvalidPassword
 func NewCreatableUser(input UserCreatable) (*User, Error) {
 	user := User{
 		Email: input.Email,

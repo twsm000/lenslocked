@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"errors"
 	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
@@ -32,10 +31,10 @@ func (h Hash) String() string {
 }
 
 // Compare possible errors:
-//   - ErrInvalidUserPassword
-func (h Hash) Compare(rawPassword RawPassword) error {
+//   - ErrInvalidPassword
+func (h Hash) Compare(rawPassword RawPassword) Error {
 	if err := bcrypt.CompareHashAndPassword(h, rawPassword.AsBytes()); err != nil {
-		return errors.Join(ErrInvalidUserPassword, err)
+		return NewClientError("The given password does not match with your current password.", ErrInvalidPassword, err)
 	}
 	return nil
 }

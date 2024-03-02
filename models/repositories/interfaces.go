@@ -12,7 +12,7 @@ type User interface {
 	Create(user *entities.User) entities.Error
 	// FindByEmail possible errors:
 	//  - ErrUserNotFound
-	FindByEmail(email entities.Email) (*entities.User, error)
+	FindByEmail(email entities.Email) (*entities.User, entities.Error)
 	// UpdatePassword possible errors:
 	//  - ErrFailedToUpdateUserPassword
 	UpdatePassword(user *entities.User) error

@@ -10,7 +10,7 @@ var (
 	ErrInvalidTokenSize     = errors.New("invalid token size")
 	ErrInvalidUser          = errors.New("invalid user")
 	ErrInvalidUserEmail     = errors.New("invalid user email")
-	ErrInvalidUserPassword  = errors.New("invalid user password")
+	ErrInvalidPassword      = errors.New("invalid password")
 )
 
 // Error is an interface to complement the error interface

@@ -1,8 +1,6 @@
 package services
 
 import (
-	"errors"
-
 	"github.com/twsm000/lenslocked/models/entities"
 	"github.com/twsm000/lenslocked/models/repositories"
 )
@@ -12,10 +10,13 @@ type User interface {
 	//   - entities.ErrFailedToHashPassword
 	//   - entities.ErrInvalidUser
 	//   - entities.ErrInvalidUserEmail
-	//   - entities.ErrInvalidUserPassword
+	//   - entities.ErrInvalidPassword
 	//   - repositories.ErrFailedToCreateUser
 	Create(input entities.UserCreatable) (*entities.User, entities.Error)
-	Authenticate(input entities.UserAuthenticable) (*entities.User, error)
+
+	// Authenticate possible errors:
+	//   - ErrInvalidAuthCredentials {repositories.ErrUserNotFound, entities.ErrInvalidPassword}
+	Authenticate(input entities.UserAuthenticable) (*entities.User, entities.Error)
 	UpdatePassword(user *entities.User, rawPassword entities.RawPassword) error
 }
 
@@ -33,7 +34,7 @@ type userService struct {
 //   - entities.ErrFailedToHashPassword
 //   - entities.ErrInvalidUser
 //   - entities.ErrInvalidUserEmail
-//   - entities.ErrInvalidUserPassword
+//   - entities.ErrInvalidPassword
 //   - repositories.ErrFailedToCreateUser
 func (us *userService) Create(input entities.UserCreatable) (*entities.User, entities.Error) {
 	user, err := entities.NewCreatableUser(input)
@@ -49,18 +50,16 @@ func (us *userService) Create(input entities.UserCreatable) (*entities.User, ent
 }
 
 // Authenticate possible errors:
-//
-// services.ErrInvalidAuthCredentials:
-//   - entities.ErrInvalidUserPassword
-//   - repositories.ErrUserNotFound
-func (us *userService) Authenticate(input entities.UserAuthenticable) (*entities.User, error) {
+//   - ErrInvalidAuthCredentials {repositories.ErrUserNotFound, entities.ErrInvalidPassword}
+func (us *userService) Authenticate(input entities.UserAuthenticable) (*entities.User, entities.Error) {
+	const invalidCredentialsErrMsg string = "Invalid credentials."
 	user, err := us.Repository.FindByEmail(input.Email)
 	if err != nil {
-		return nil, errors.Join(ErrInvalidAuthCredentials, err)
+		return nil, entities.NewClientError(invalidCredentialsErrMsg, ErrInvalidAuthCredentials, err)
 	}
 
 	if err := user.Password.Compare(input.Password); err != nil {
-		return nil, errors.Join(ErrInvalidAuthCredentials, err)
+		return nil, entities.NewClientError(invalidCredentialsErrMsg, ErrInvalidAuthCredentials, err)
 	}
 
 	return user, nil

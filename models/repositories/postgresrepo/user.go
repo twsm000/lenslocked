@@ -91,7 +91,9 @@ func (ur *userRepository) Create(user *entities.User) entities.Error {
 	return nil
 }
 
-func (ur *userRepository) FindByEmail(email entities.Email) (*entities.User, error) {
+// FindByEmail possible errors:
+//   - ErrUserNotFound
+func (ur *userRepository) FindByEmail(email entities.Email) (*entities.User, entities.Error) {
 	row := ur.findUserByEmailStmt.QueryRow(email)
 	var user entities.User
 	err := row.Scan(
@@ -102,7 +104,7 @@ func (ur *userRepository) FindByEmail(email entities.Email) (*entities.User, err
 		&user.Password,
 	)
 	if err != nil {
-		return nil, errors.Join(repositories.ErrUserNotFound, err)
+		return nil, entities.NewClientError("User was not found with the given e-mail", repositories.ErrUserNotFound, err)
 	}
 	return &user, nil
 }

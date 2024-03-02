@@ -15,7 +15,11 @@ type PasswordReset struct {
 	ExpiresAt time.Time
 }
 
-func NewCreatablePasswordReset(userID uint64, bytesPerToken int, timeout time.Time) (*PasswordReset, error) {
+// NewCreatablePasswordReset possible errors:
+//   - rand.ErrFailedToGenerateSlice
+//   - rand.ErrInvalidSizeUnexpected
+//   - ErrTokenSizeBelowMinRequired
+func NewCreatablePasswordReset(userID uint64, bytesPerToken int, timeout time.Time) (*PasswordReset, Error) {
 	var token SessionToken
 	err := token.Update(bytesPerToken)
 	if err != nil {

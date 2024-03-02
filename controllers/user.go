@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,12 +17,16 @@ type SignUpPageData struct {
 	Email string
 }
 
+type SignInPageData struct {
+	Email string
+}
+
 type User struct {
 	LogInfo   *log.Logger
 	LogError  *log.Logger
 	Templates struct {
 		SignUpPage            Template[SignUpPageData]
-		SignInPage            Template[any]
+		SignInPage            Template[SignInPageData]
 		ForgotPasswordPage    Template[any]
 		CheckPasswordSentPage Template[any]
 		ResetPasswordPage     Template[any]
@@ -39,11 +42,7 @@ func (uc *User) SignUpPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (uc *User) SignInPageHandler(w http.ResponseWriter, r *http.Request) {
-	var data struct {
-		Email string
-	}
-	data.Email = r.FormValue("email")
-	uc.Templates.SignInPage.Execute(w, r, data)
+	uc.Templates.SignInPage.Execute(w, r, SignInPageData{r.FormValue("email")})
 }
 
 func (uc *User) ForgotPasswordPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +65,7 @@ func (uc *User) Create(w http.ResponseWriter, r *http.Request) {
 	var userInput entities.UserCreatable
 	userInput.Email.Set(r.PostFormValue("email"))
 	userInput.Password.Set(r.PostFormValue("password"))
-	signUpPageData := SignUpPageData{userInput.Email.String()}
+	signUpPageData := SignUpPageData{Email: r.PostFormValue("email")}
 
 	user, err := uc.UserService.Create(userInput)
 	if err != nil {
@@ -81,6 +80,7 @@ func (uc *User) Create(w http.ResponseWriter, r *http.Request) {
 	uc.LogInfo.Println("User created:", user)
 	session, err := uc.SessionService.Create(user.ID)
 	if err != nil {
+		uc.LogError.Println(err)
 		if err.IsClientErr() {
 			if err.Is(repositories.ErrUserNotFound) {
 				err = entities.NewClientError("Something went wrong while creating your user, please try again!", err)
@@ -89,7 +89,6 @@ func (uc *User) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		uc.LogError.Println(err)
 		httpll.Redirect500Page(w, r)
 		return
 	}
@@ -102,21 +101,17 @@ func (uc *User) Authenticate(w http.ResponseWriter, r *http.Request) {
 	var authCredentials entities.UserAuthenticable
 	authCredentials.Email.Set(r.PostFormValue("email"))
 	authCredentials.Password.Set(r.PostFormValue("password"))
+	signInPageData := SignInPageData{Email: r.PostFormValue("email")}
 
 	user, err := uc.UserService.Authenticate(authCredentials)
 	if err != nil {
-		switch {
-		case errors.Is(err, entities.ErrInvalidUserPassword),
-			errors.Is(err, services.ErrInvalidAuthCredentials):
-			url := fmt.Sprintf("/signin?email=%s", authCredentials.Email)
-			http.Redirect(w, r, url, http.StatusFound)
-
-		default:
-			err = errors.Join(ErrUntracked, err)
-			httpll.SendStatusInternalServerError(w, r)
+		uc.LogError.Println(err)
+		if err.IsClientErr() {
+			uc.Templates.SignInPage.Execute(w, r, signInPageData, err)
+			return
 		}
 
-		uc.LogError.Println(err)
+		httpll.Redirect500Page(w, r)
 		return
 	}
 
@@ -124,6 +119,14 @@ func (uc *User) Authenticate(w http.ResponseWriter, r *http.Request) {
 	session, err := uc.SessionService.Create(user.ID)
 	if err != nil {
 		uc.LogError.Println(err)
+		if err.IsClientErr() {
+			if err.Is(repositories.ErrUserNotFound) {
+				err = entities.NewClientError("Something went wrong while authenticating your user, please try again!", err)
+			}
+			uc.Templates.SignInPage.Execute(w, r, signInPageData, err)
+			return
+		}
+
 		httpll.Redirect500Page(w, r)
 		return
 	}
